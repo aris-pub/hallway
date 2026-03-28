@@ -159,8 +159,12 @@ SEARCH WINDOW: {week_ago} to {today}
 THE BEAT:
 {BEAT}
 
-SOURCES TO CHECK (prioritize these, use web search to fill gaps):
+STEP 1 - CHECK THESE SOURCES for recent posts/articles from {week_ago} to {today}:
 {source_list}
+
+STEP 2 - After checking the sources above, do ONE broad web search for \
+"AI affecting scientific research practice {today}" to catch anything \
+the listed sources missed. Only include results that clearly fit the beat.
 {dedup_block}
 VOICE:
 Write as a researcher speaking to researchers. No excitement, no alarm. \

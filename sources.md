@@ -17,6 +17,9 @@ Feeds, blogs, and outlets to scan for Hallway Track links.
 - [Elicit Blog](https://elicit.com/blog) - AI-assisted literature review tooling
 - [Nature Machine Intelligence Editorials](https://www.nature.com/natmachintell/articles?type=editorial) - AI methodology standards
 - [Retraction Watch](https://retractionwatch.com/) - AI's impact on the scientific record
+- [Google DeepMind Research Blog](https://deepmind.google/research/) - AlphaFold, scientific AI tools
+- [PubPeer](https://pubpeer.com/) - Post-publication review, AI-generated paper detection
+- [ASAPbio](https://asapbio.org/news) - Preprint advocacy, AI in preprint screening
 
 ## Research Tools & Infrastructure
 
@@ -34,6 +37,18 @@ Feeds, blogs, and outlets to scan for Hallway Track links.
 
 - [NIH Office of Data Science Strategy](https://datascience.nih.gov/news) - AI policy affecting biomedical research
 - [EU Commission AI Policy](https://digital-strategy.ec.europa.eu/en/policies/european-approach-artificial-intelligence) - European AI regulation affecting research
+
+## Preprints & Primary Literature
+
+- [arXiv cs.AI](https://arxiv.org/list/cs.AI/recent) - AI research preprints
+- [arXiv cs.DL](https://arxiv.org/list/cs.DL/recent) - Digital libraries, scholarly infrastructure
+- [bioRxiv](https://www.biorxiv.org/) - Biology preprints, AI methods in life sciences
+- [medRxiv](https://www.medrxiv.org/) - Medical preprints, AI in clinical research
+
+## Metascience & Policy
+
+- [MetaScience](https://metascience.info/) - Science of science, research reform
+- [Center for Open Science](https://www.cos.io/blog) - Open science infrastructure and AI
 
 ## Communities
 
