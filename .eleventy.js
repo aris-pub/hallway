@@ -1,0 +1,39 @@
+module.exports = function(eleventyConfig) {
+  eleventyConfig.addPassthroughCopy("src/css");
+  eleventyConfig.addPassthroughCopy("src/js");
+  eleventyConfig.addPassthroughCopy("src/favicon.svg");
+
+  eleventyConfig.addFilter("dateFormat", (date) => {
+    const d = new Date(date);
+    const months = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"];
+    return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+  });
+
+  eleventyConfig.addFilter("isoDate", (date) => {
+    const d = new Date(date);
+    return d.toISOString().split("T")[0];
+  });
+
+  eleventyConfig.addFilter("padStart", (num, length) => {
+    return String(num).padStart(length, "0");
+  });
+
+  eleventyConfig.addFilter("absoluteUrl", (url, base) => {
+    if (!base) return url;
+    return new URL(url, base).toString();
+  });
+
+  return {
+    dir: {
+      input: "src",
+      output: "_site",
+      includes: "_includes",
+      layouts: "_layouts",
+      data: "_data"
+    },
+    templateFormats: ["md", "njk", "html"],
+    markdownTemplateEngine: "njk",
+    htmlTemplateEngine: "njk"
+  };
+};

@@ -1,0 +1,24 @@
+---
+layout: base.njk
+description: "How AI is affecting the practice of science. A weekly curated link roundup by Leo Torres."
+---
+
+<div class="archive-header">
+    <p class="archive-description">How AI is affecting the practice of science. Weekly.</p>
+</div>
+
+{% set editions = collections.edition | reverse %}
+{% if editions.length %}
+<ul class="edition-list">
+    {% for post in editions %}
+    <li>
+        <a href="{{ post.url }}">
+            <span class="edition-list-number">No. {{ post.data.number | padStart(3) }}</span>
+            <span class="edition-list-date">{{ post.date | dateFormat }}</span>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>First edition coming soon.</p>
+{% endif %}

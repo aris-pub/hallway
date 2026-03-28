@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if pageTitle %}{{ pageTitle }} -{{ metadata.title }}{% else %}{{ metadata.title }}{% endif %}</title>
+    <meta name="description" content="{{ description or metadata.description }}">
+    <meta name="author" content="{{ metadata.author.name }}">
+    <meta name="theme-color" content="#AD71F2">
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ page.url | url | absoluteUrl(metadata.url) }}">
+    <meta property="og:title" content="{% if pageTitle %}{{ pageTitle }} -{{ metadata.title }}{% else %}{{ metadata.title }}{% endif %}">
+    <meta property="og:description" content="{{ description or metadata.description }}">
+
+    <link rel="canonical" href="{{ page.url | url | absoluteUrl(metadata.url) }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="site-title">The Hallway Track</a>
+                <nav>
+                    <a href="/latest/">Latest</a>
+                    <a href="/about/">About</a>
+                    <button class="theme-toggle" aria-label="Toggle dark mode">
+                        <svg class="sun-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg class="moon-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {{ content | safe }}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-copy">
+                    Part of <a href="https://aris.pub">The Aris Program</a>.
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/aris-pub">GitHub</a>
+                    <a href="https://aris-pub.zulipchat.com/">Zulip</a>
+                    <a href="mailto:{{ metadata.author.email }}">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+---
+layout: base.njk
+---
+
+<article class="edition">
+    <header class="edition-header">
+        <h1 class="edition-number">No. {{ number | padStart(3) }}</h1>
+        <time class="edition-date" datetime="{{ date | isoDate }}">{{ date | dateFormat }}</time>
+    </header>
+
+    <div class="edition-body">
+        {{ content | safe }}
+    </div>
+</article>

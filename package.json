@@ -1,0 +1,15 @@
+{
+  "name": "hallway-track",
+  "version": "1.0.0",
+  "description": "The Hallway Track — How AI is affecting the practice of science",
+  "scripts": {
+    "start": "eleventy --serve",
+    "build": "eleventy",
+    "clean": "rm -rf _site"
+  },
+  "author": "Aris",
+  "license": "MIT",
+  "devDependencies": {
+    "@11ty/eleventy": "^2.0.1"
+  }
+}

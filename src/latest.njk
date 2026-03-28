@@ -1,0 +1,17 @@
+---
+permalink: /latest/index.html
+eleventyExcludeFromCollections: true
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% set latest = collections.edition | last %}
+    <meta http-equiv="refresh" content="0; url=/no/{{ latest.data.number | padStart(3) }}/">
+    <link rel="canonical" href="/no/{{ latest.data.number | padStart(3) }}/">
+    <title>Redirecting to latest edition</title>
+</head>
+<body>
+    <p>Redirecting to <a href="/no/{{ latest.data.number | padStart(3) }}/">No. {{ latest.data.number | padStart(3) }}</a>...</p>
+</body>
+</html>
