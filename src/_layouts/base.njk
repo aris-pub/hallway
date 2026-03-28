@@ -12,6 +12,7 @@
     <meta property="og:url" content="{{ page.url | url | absoluteUrl(metadata.url) }}">
     <meta property="og:title" content="{% if pageTitle %}{{ pageTitle }} -{{ metadata.title }}{% else %}{{ metadata.title }}{% endif %}">
     <meta property="og:description" content="{{ description or metadata.description }}">
+    <meta property="og:image" content="{{ metadata.url }}{% if number %}/images/og/{{ number | padStart(3) }}.png{% else %}/images/og-default.png{% endif %}">
 
     <link rel="canonical" href="{{ page.url | url | absoluteUrl(metadata.url) }}">
 

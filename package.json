@@ -13,6 +13,7 @@
     "@11ty/eleventy": "^2.0.1"
   },
   "dependencies": {
-    "@11ty/eleventy-plugin-rss": "^1.2.0"
+    "@11ty/eleventy-plugin-rss": "^1.2.0",
+    "sharp": "^0.34.5"
   }
 }
