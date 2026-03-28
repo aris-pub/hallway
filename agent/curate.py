@@ -22,6 +22,8 @@ import resend
 REPO_ROOT = Path(__file__).parent.parent
 SOURCES_FILE = REPO_ROOT / "sources.md"
 EDITIONS_DIR = REPO_ROOT / "src" / "no"
+MIN_CONTENT_LENGTH = 100
+DEDUP_EDITIONS = 3
 
 BEAT = """\
 How AI is affecting the practice of science. Specifically: AI agents for \
@@ -73,9 +75,31 @@ def next_publish_date() -> str:
     return (today + timedelta(days=days_ahead)).strftime("%Y-%m-%d")
 
 
+def extract_urls(text: str) -> list[str]:
+    """Extract markdown link URLs from text."""
+    return re.findall(r"\[.+?\]\((https?://[^\)]+)\)", text)
+
+
+def get_previous_urls(n: int = DEDUP_EDITIONS) -> list[str]:
+    """Collect URLs from the most recent n editions for deduplication."""
+    files = sorted(EDITIONS_DIR.glob("*.md"), reverse=True)
+    urls = []
+    count = 0
+    for f in files:
+        try:
+            int(f.stem)
+        except ValueError:
+            continue
+        urls.extend(extract_urls(f.read_text()))
+        count += 1
+        if count >= n:
+            break
+    return urls
+
+
 def verify_links(content: str) -> str:
     """Check that URLs in the curated content actually resolve."""
-    urls = re.findall(r"\[.+?\]\((https?://[^\)]+)\)", content)
+    urls = extract_urls(content)
     broken = []
     with httpx.Client(timeout=10, follow_redirects=True) as client:
         for url in urls:
@@ -92,7 +116,7 @@ def verify_links(content: str) -> str:
     return content
 
 
-def scan_and_curate(sources: list[dict[str, str]]) -> str:
+def scan_and_curate(sources: list[dict[str, str]], previous_urls: list[str] | None = None) -> str:
     """Use Claude with web search to find and curate links."""
     client = anthropic.Anthropic()
 
@@ -103,6 +127,14 @@ def scan_and_curate(sources: list[dict[str, str]]) -> str:
         f"- {s['name']}: {s['url']} ({s['description']})"
         for s in sources
     )
+
+    dedup_block = ""
+    if previous_urls:
+        url_list = "\n".join(f"- {u}" for u in previous_urls)
+        dedup_block = f"""
+ALREADY COVERED (do not include these URLs or stories about the same topic):
+{url_list}
+"""
 
     response = client.messages.create(
         model="claude-sonnet-4-6",
@@ -122,7 +154,7 @@ THE BEAT:
 
 SOURCES TO CHECK (prioritize these, use open web search to fill gaps):
 {source_list}
-
+{dedup_block}
 VOICE:
 Write as a researcher speaking to researchers. No excitement, no alarm. \
 Name the specific thing that happened and why it matters. Avoid words like \
@@ -204,14 +236,32 @@ def main():
     args = parser.parse_args()
 
     sources = parse_sources()
+    if not sources:
+        print("Error: No sources found in sources.md. Aborting.")
+        return
+
     number = next_edition_number()
     date = next_publish_date()
+    previous_urls = get_previous_urls()
+
+    if previous_urls:
+        print(f"Dedup: excluding {len(previous_urls)} URLs from recent editions")
 
     print(f"Scanning sources for edition No. {str(number).zfill(3)}...")
-    content = scan_and_curate(sources)
+    try:
+        content = scan_and_curate(sources, previous_urls)
+    except anthropic.APIError as e:
+        print(f"Error: Anthropic API call failed: {e}")
+        return
+    except anthropic.AuthenticationError:
+        print("Error: Invalid ANTHROPIC_API_KEY. Aborting.")
+        return
 
-    if len(content.strip()) < 100:
-        print("Error: Agent returned insufficient content. Aborting.")
+    if len(content.strip()) < MIN_CONTENT_LENGTH:
+        print(
+            f"Error: Agent returned insufficient content "
+            f"({len(content.strip())} chars, minimum {MIN_CONTENT_LENGTH}). Aborting."
+        )
         return
 
     verify_links(content)

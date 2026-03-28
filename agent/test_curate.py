@@ -6,7 +6,16 @@ from unittest.mock import patch
 
 import pytest
 
-from curate import next_edition_number, next_publish_date, parse_sources, write_edition
+from curate import (
+    extract_urls,
+    get_previous_urls,
+    next_edition_number,
+    next_publish_date,
+    parse_sources,
+    verify_links,
+    write_edition,
+    MIN_CONTENT_LENGTH,
+)
 
 
 @pytest.fixture
@@ -117,6 +126,76 @@ class TestNextPublishDate:
         mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
         result = next_publish_date()
         assert result == "2026-03-30"  # next day is Monday
+
+
+class TestExtractUrls:
+    def test_extracts_markdown_links(self):
+        text = "- [Title](https://example.com)\n- [Other](https://other.com/path)"
+        assert extract_urls(text) == ["https://example.com", "https://other.com/path"]
+
+    def test_ignores_non_links(self):
+        text = "No links here, just text."
+        assert extract_urls(text) == []
+
+    def test_ignores_bare_urls(self):
+        text = "Visit https://example.com for more."
+        assert extract_urls(text) == []
+
+    def test_handles_mixed_content(self):
+        text = (
+            "## Tools\n\n"
+            "- [Tool A](https://a.com) does things\n\n"
+            "Some paragraph text.\n\n"
+            "- [Tool B](https://b.com) does other things\n"
+        )
+        assert extract_urls(text) == ["https://a.com", "https://b.com"]
+
+
+class TestGetPreviousUrls:
+    def test_collects_from_recent_editions(self, editions_dir):
+        (editions_dir / "001.md").write_text(
+            "---\n---\n- [A](https://a.com)\n- [B](https://b.com)\n"
+        )
+        (editions_dir / "002.md").write_text(
+            "---\n---\n- [C](https://c.com)\n"
+        )
+        urls = get_previous_urls(n=2)
+        assert "https://c.com" in urls
+        assert "https://a.com" in urls
+        assert "https://b.com" in urls
+
+    def test_respects_limit(self, editions_dir):
+        (editions_dir / "001.md").write_text("---\n---\n- [Old](https://old.com)\n")
+        (editions_dir / "002.md").write_text("---\n---\n- [Mid](https://mid.com)\n")
+        (editions_dir / "003.md").write_text("---\n---\n- [New](https://new.com)\n")
+        urls = get_previous_urls(n=1)
+        assert "https://new.com" in urls
+        assert "https://old.com" not in urls
+
+    def test_empty_directory(self, editions_dir):
+        assert get_previous_urls() == []
+
+    def test_ignores_non_numeric_files(self, editions_dir):
+        (editions_dir / "no.11tydata.js").write_text("module.exports = {};")
+        (editions_dir / "001.md").write_text("---\n---\n- [A](https://a.com)\n")
+        urls = get_previous_urls()
+        assert urls == ["https://a.com"]
+
+
+class TestVerifyLinks:
+    def test_returns_content_unchanged(self):
+        content = "- [Example](https://httpbin.org/status/200)"
+        assert verify_links(content) == content
+
+    def test_content_with_no_links(self):
+        content = "No links here."
+        assert verify_links(content) == content
+
+
+class TestMinContentLength:
+    def test_constant_is_reasonable(self):
+        assert MIN_CONTENT_LENGTH > 0
+        assert MIN_CONTENT_LENGTH <= 500
 
 
 class TestWriteEdition:
