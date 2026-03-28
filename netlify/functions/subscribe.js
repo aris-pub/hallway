@@ -72,7 +72,7 @@ exports.handler = async (event) => {
     });
   } catch (err) {
     console.error("Failed to create contact:", err.message);
-    return { statusCode: 500, body: "Subscription failed. Please try again." };
+    return { statusCode: 500, body: err.message };
   }
 
   return {
