@@ -75,6 +75,24 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: "Subscription failed. Please try again." };
   }
 
+  try {
+    await resendRequest("/emails", {
+      from: "The Hallway Track <hallway@updates.aris.pub>",
+      to: [email],
+      reply_to: "hello@aris.pub",
+      subject: "Subscribed to The Hallway Track",
+      html: [
+        '<div style="max-width:500px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a;">',
+        "<p>You're subscribed to The Hallway Track, a weekly curated link roundup on how AI is affecting the practice of science.</p>",
+        '<p>Each edition will arrive in your inbox on Mondays.</p>',
+        '<p style="font-size:13px;color:#7a7a7a;margin-top:32px;">Part of <a href="https://aris.pub">The Aris Program</a>.</p>',
+        "</div>",
+      ].join("\n"),
+    });
+  } catch (err) {
+    console.error("Failed to send confirmation:", err.message);
+  }
+
   return {
     statusCode: 302,
     headers: { Location: "/subscribed/" },
