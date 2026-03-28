@@ -126,7 +126,8 @@ nav a:hover {
     border: none;
     cursor: pointer;
     color: var(--text-secondary);
-    padding: 0;
+    padding: 5px;
+    margin: -5px;
     font-size: 0.95rem;
     transition: color 0.2s ease;
     line-height: 1;
@@ -207,7 +208,6 @@ nav a:hover {
 
 .edition-body p {
     margin-bottom: var(--space-sm);
-    color: var(--text-secondary);
 }
 
 /* Homepage */
@@ -411,6 +411,29 @@ nav a:hover {
     color: var(--text-secondary);
 }
 
+/* About page */
+
+.about {
+    padding: var(--space-md) 0 var(--space-lg);
+}
+
+.about h1 {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-md);
+}
+
+.about p {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.about p:last-child {
+    margin-bottom: 0;
+}
+
 /* Legal pages */
 
 .legal h1 {
@@ -521,5 +544,13 @@ footer {
     :root {
         --space-md: 1.5rem;
         --space-lg: 2rem;
+    }
+
+    .subscribe-form {
+        flex-direction: column;
+    }
+
+    .subscribe-form button {
+        width: 100%;
     }
 }
