@@ -235,20 +235,22 @@ nav a:hover {
 }
 
 .latest-edition {
+    display: block;
     margin-bottom: var(--space-md);
     padding: var(--space-sm);
     background: var(--bg-subtle);
     border: 1px solid var(--border-light);
     border-radius: 6px;
-}
-
-.latest-link {
-    display: block;
     color: var(--text-primary);
-    transition: color 0.2s ease;
+    text-decoration: none;
+    transition: border-color 0.2s ease;
 }
 
-.latest-link:hover {
+.latest-edition:hover {
+    border-color: var(--accent);
+}
+
+.latest-edition:hover .latest-number {
     color: var(--accent);
 }
 
@@ -275,6 +277,7 @@ nav a:hover {
 }
 
 .latest-preview {
+    display: block;
     color: var(--text-secondary);
     margin-top: var(--space-xs);
     font-size: 0.95rem;
