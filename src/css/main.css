@@ -169,6 +169,13 @@ nav a:hover {
     letter-spacing: -0.02em;
 }
 
+.edition-title {
+    display: block;
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
 .edition-date {
     display: block;
     font-size: 0.95rem;
@@ -276,12 +283,11 @@ nav a:hover {
     margin-left: 0.75rem;
 }
 
-.latest-preview {
+.latest-title {
     display: block;
     color: var(--text-secondary);
-    margin-top: var(--space-xs);
+    margin-top: 0.25rem;
     font-size: 0.95rem;
-    line-height: 1.6;
 }
 
 /* Archive */
@@ -312,9 +318,7 @@ nav a:hover {
 }
 
 .edition-list a {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+    display: block;
     padding: var(--space-sm) 0;
     color: var(--text-primary);
     transition: color 0.2s ease;
@@ -324,9 +328,22 @@ nav a:hover {
     color: var(--accent);
 }
 
+.edition-list-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
 .edition-list .edition-list-number {
     font-family: var(--font-serif);
     font-weight: 400;
+}
+
+.edition-list .edition-list-title {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 0.15rem;
 }
 
 .edition-list .edition-list-date {

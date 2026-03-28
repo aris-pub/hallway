@@ -13,10 +13,8 @@ description: "How AI is affecting the practice of science. A weekly curated link
     <span class="latest-label">Latest</span>
     <span class="latest-number">No. {{ latest.data.number | padStart(3) }}</span>
     <span class="latest-date">{{ latest.date | dateFormat }}</span>
-    {% if latest.content | trim %}
-    <span class="latest-preview">
-        {{ latest.content | excerpt | safe }}
-    </span>
+    {% if latest.data.title %}
+    <span class="latest-title">{{ latest.data.title }}</span>
     {% endif %}
 </a>
 {% endif %}
@@ -41,8 +39,11 @@ description: "How AI is affecting the practice of science. A weekly curated link
         {% if not loop.first %}
         <li>
             <a href="{{ post.url }}">
-                <span class="edition-list-number">No. {{ post.data.number | padStart(3) }}</span>
-                <span class="edition-list-date">{{ post.date | dateFormat }}</span>
+                <span class="edition-list-meta">
+                    <span class="edition-list-number">No. {{ post.data.number | padStart(3) }}</span>
+                    <span class="edition-list-date">{{ post.date | dateFormat }}</span>
+                </span>
+                {% if post.data.title %}<span class="edition-list-title">{{ post.data.title }}</span>{% endif %}
             </a>
         </li>
         {% endif %}

@@ -149,6 +149,8 @@ The file must follow this template exactly:
 ```
 
 Replace NUMBER with {number}, DATE with {date}, PADDED with {padded}.
+Replace SHORT COMMA-SEPARATED SUMMARY OF KEY TOPICS with a brief title \
+summarizing the 2-3 most notable items (e.g., "AI Scientist v2, ICML watermarks, scientific monoculture").
 Replace the example sections and links with real content from your search.
 
 TODAY'S DATE: {today}

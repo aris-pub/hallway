@@ -5,6 +5,7 @@ layout: base.njk
 <article class="edition">
     <header class="edition-header">
         <h1 class="edition-number">No. {{ number | padStart(3) }}</h1>
+        {% if title %}<p class="edition-title">{{ title }}</p>{% endif %}
         <time class="edition-date" datetime="{{ date | isoDate }}">{{ date | dateFormat }}</time>
     </header>
 
