@@ -137,8 +137,8 @@ nav a:hover {
 }
 
 .theme-toggle svg {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     display: block;
 }
 
@@ -210,24 +210,73 @@ nav a:hover {
     color: var(--text-secondary);
 }
 
-/* Archive (index page) */
+/* Homepage */
 
-.archive-header {
+.homepage-blurb {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
     margin-bottom: var(--space-md);
 }
 
-.archive-title {
-    font-family: var(--font-serif);
-    font-size: 2rem;
-    font-weight: 400;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+.latest-edition {
+    margin-bottom: var(--space-md);
 }
 
-.archive-description {
+.latest-link {
+    display: block;
+    color: var(--text-primary);
+    transition: color 0.2s ease;
+}
+
+.latest-link:hover {
+    color: var(--accent);
+}
+
+.latest-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.latest-number {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 400;
+}
+
+.latest-date {
+    font-size: 0.9rem;
+    color: var(--text-tertiary);
+    margin-left: 0.75rem;
+}
+
+.latest-preview {
     color: var(--text-secondary);
     margin-top: var(--space-xs);
-    font-size: 1.05rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Archive */
+
+.archive-section {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-light);
+}
+
+.archive-heading {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-sm);
 }
 
 .edition-list {
@@ -260,6 +309,134 @@ nav a:hover {
 .edition-list .edition-list-date {
     font-size: 0.9rem;
     color: var(--text-tertiary);
+}
+
+/* Subscribe form */
+
+.subscribe {
+    margin-top: var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-light);
+}
+
+.subscribe-heading {
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+    font-weight: 400;
+    margin-bottom: var(--space-sm);
+}
+
+.subscribe-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.subscribe-form input[type="email"] {
+    flex: 1;
+    padding: 0.6rem 0.8rem;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+}
+
+.subscribe-form input[type="email"]::placeholder {
+    color: var(--text-tertiary);
+}
+
+.subscribe-form button {
+    padding: 0.6rem 1.2rem;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--bg-primary);
+    background: var(--text-primary);
+    border: 1px solid var(--text-primary);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.subscribe-form button:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.subscribe-note {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    margin-top: 0.5rem;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Subscribed confirmation */
+
+.subscribed {
+    padding: var(--space-lg) 0;
+}
+
+.subscribed h1 {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 400;
+    margin-bottom: var(--space-xs);
+}
+
+.subscribed p {
+    color: var(--text-secondary);
+}
+
+/* Legal pages */
+
+.legal h1 {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-xs);
+}
+
+.legal-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+.legal-meta {
+    font-size: 0.9rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
+.legal h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: var(--space-md);
+    margin-bottom: var(--space-xs);
+}
+
+.legal h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: var(--space-sm);
+    margin-bottom: var(--space-xs);
+}
+
+.legal p, .legal ul {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+}
+
+.legal ul {
+    padding-left: 1.5rem;
+}
+
+.legal li {
+    margin-bottom: 0.25rem;
 }
 
 /* Footer */

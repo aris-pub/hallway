@@ -19,6 +19,12 @@ module.exports = function(eleventyConfig) {
     return String(num).padStart(length, "0");
   });
 
+  eleventyConfig.addFilter("excerpt", (content) => {
+    if (!content) return "";
+    const stripped = content.replace(/<[^>]+>/g, "");
+    return stripped.substring(0, 200).trim() + (stripped.length > 200 ? "..." : "");
+  });
+
   eleventyConfig.addFilter("absoluteUrl", (url, base) => {
     if (!base) return url;
     return new URL(url, base).toString();

@@ -3,22 +3,49 @@ layout: base.njk
 description: "How AI is affecting the practice of science. A weekly curated link roundup by Leo Torres."
 ---
 
-<div class="archive-header">
-    <p class="archive-description">How AI is affecting the practice of science. Weekly.</p>
-</div>
+<p class="homepage-blurb">How AI is affecting the practice of science. A weekly curated link roundup.</p>
 
 {% set editions = collections.edition | reverse %}
 {% if editions.length %}
-<ul class="edition-list">
-    {% for post in editions %}
-    <li>
-        <a href="{{ post.url }}">
-            <span class="edition-list-number">No. {{ post.data.number | padStart(3) }}</span>
-            <span class="edition-list-date">{{ post.date | dateFormat }}</span>
-        </a>
-    </li>
-    {% endfor %}
-</ul>
-{% else %}
-<p>First edition coming soon.</p>
+{% set latest = editions[0] %}
+<div class="latest-edition">
+    <a href="{{ latest.url }}" class="latest-link">
+        <span class="latest-label">Latest</span>
+        <span class="latest-number">No. {{ latest.data.number | padStart(3) }}</span>
+        <span class="latest-date">{{ latest.date | dateFormat }}</span>
+    </a>
+    {% if latest.content | trim %}
+    <div class="latest-preview">
+        {{ latest.content | excerpt | safe }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="subscribe">
+    <h2 class="subscribe-heading">Get it in your inbox</h2>
+    <form name="subscribe" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/subscribed/">
+        <p class="hidden"><label>Don't fill this out: <input name="bot-field"></label></p>
+        <div class="subscribe-form">
+            <input type="email" name="email" placeholder="you@example.com" required aria-label="Email address">
+            <button type="submit">Subscribe</button>
+        </div>
+        <p class="subscribe-note">Weekly. Unsubscribe anytime. See our <a href="/privacy/">privacy policy</a>.</p>
+    </form>
+</div>
+
+{% if editions.length > 1 %}
+<div class="archive-section">
+    <h2 class="archive-heading">Archive</h2>
+    <ul class="edition-list">
+        {% for post in editions %}
+        <li>
+            <a href="{{ post.url }}">
+                <span class="edition-list-number">No. {{ post.data.number | padStart(3) }}</span>
+                <span class="edition-list-date">{{ post.date | dateFormat }}</span>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
 {% endif %}
