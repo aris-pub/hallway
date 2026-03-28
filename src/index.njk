@@ -25,7 +25,7 @@ description: "How AI is affecting the practice of science. A weekly curated link
 
 <div class="subscribe">
     <h2 class="subscribe-heading">Get it in your inbox</h2>
-    <form name="subscribe" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/subscribed/">
+    <form method="POST" action="/.netlify/functions/subscribe">
         <p class="hidden"><label>Don't fill this out: <input name="bot-field"></label></p>
         <div class="subscribe-form">
             <input type="email" name="email" placeholder="you@example.com" required aria-label="Email address">

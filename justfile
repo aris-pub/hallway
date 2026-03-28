@@ -17,6 +17,10 @@ agent *FLAGS:
 agent-dry:
     just agent --dry-run
 
+# Broadcast an edition to newsletter subscribers
+broadcast NUMBER *FLAGS:
+    uv run --with resend,httpx python agent/broadcast.py {{NUMBER}} {{FLAGS}}
+
 # Run tests
 test:
     uv run --with anthropic,httpx,resend,pytest pytest agent/test_curate.py -v
