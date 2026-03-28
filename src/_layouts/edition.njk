@@ -12,6 +12,26 @@ layout: base.njk
     <div class="edition-body">
         {{ content | safe }}
     </div>
+    {% set prevEdition = collections.edition | getPreviousCollectionItem(page) %}
+    {% set nextEdition = collections.edition | getNextCollectionItem(page) %}
+    {% if prevEdition or nextEdition %}
+    <nav class="edition-nav">
+        {% if prevEdition %}
+        <a href="{{ prevEdition.url }}" class="edition-nav-link edition-nav-prev">
+            <span class="edition-nav-label">Previous</span>
+            <span class="edition-nav-number">No. {{ prevEdition.data.number | padStart(3) }}</span>
+        </a>
+        {% else %}
+        <span></span>
+        {% endif %}
+        {% if nextEdition %}
+        <a href="{{ nextEdition.url }}" class="edition-nav-link edition-nav-next">
+            <span class="edition-nav-label">Next</span>
+            <span class="edition-nav-number">No. {{ nextEdition.data.number | padStart(3) }}</span>
+        </a>
+        {% endif %}
+    </nav>
+    {% endif %}
 </article>
 
 <div class="subscribe">

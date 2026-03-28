@@ -247,6 +247,44 @@ nav a:hover {
     color: var(--text-secondary);
 }
 
+/* Edition navigation */
+
+.edition-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-light);
+}
+
+.edition-nav-link {
+    color: var(--text-primary);
+    transition: color 0.2s ease;
+}
+
+.edition-nav-link:hover {
+    color: var(--accent);
+}
+
+.edition-nav-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: 0.15rem;
+}
+
+.edition-nav-number {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+}
+
+.edition-nav-next {
+    text-align: right;
+}
+
 /* Homepage */
 
 .homepage-blurb {
