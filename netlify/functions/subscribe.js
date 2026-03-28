@@ -81,13 +81,29 @@ exports.handler = async (event) => {
       to: [email],
       reply_to: "hello@aris.pub",
       subject: "Subscribed to The Hallway Track",
-      html: [
-        '<div style="max-width:500px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#0a0a0a;">',
-        "<p>You're subscribed to The Hallway Track, a weekly curated link roundup on how AI is affecting the practice of science.</p>",
-        '<p>Each edition will arrive in your inbox on Mondays.</p>',
-        '<p style="font-size:13px;color:#7a7a7a;margin-top:32px;">Part of <a href="https://aris.pub">The Aris Program</a>.</p>',
-        "</div>",
-      ].join("\n"),
+      html: `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #AD71F2; margin: 0; font-weight: 400;">The Hallway Track</h1>
+    </div>
+
+    <div style="background: #f8fafc; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #AD71F2;">
+        <p style="font-size: 16px; margin: 0 0 20px 0;">You're subscribed to The Hallway Track, a weekly curated link roundup on how AI is affecting the practice of science.</p>
+        <p style="font-size: 16px; margin: 0;">Each edition will arrive in your inbox on Mondays.</p>
+    </div>
+
+    <div style="text-align: center; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+        <p style="margin: 0; font-size: 12px;">
+            Part of <a href="https://aris.pub" style="color: #AD71F2;">The Aris Program</a>
+        </p>
+    </div>
+</body>
+</html>`,
     });
   } catch (err) {
     console.error("Failed to send confirmation:", err.message);
