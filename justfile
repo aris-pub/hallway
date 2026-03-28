@@ -1,3 +1,5 @@
+set dotenv-load
+
 # Build the site locally (generate og:images + 11ty build)
 build:
     node scripts/gen-og-images.js
@@ -9,13 +11,13 @@ deploy: build
     git commit -m "Deploy $(date +%Y-%m-%d)" || true
     git push
 
-# Run the curation agent (generates a draft edition)
-agent *FLAGS:
-    uv run --with httpx,resend python agent/curate.py {{FLAGS}}
+# Run the curation agent (scans sources, writes draft, sends notification email)
+agent:
+    uv run --with httpx,resend python agent/curate.py
 
-# Run the curation agent in dry-run mode (no email)
+# Preview what the agent would do without scanning or writing
 agent-dry:
-    just agent --dry-run
+    uv run --with httpx,resend python agent/curate.py --dry-run
 
 # Broadcast an edition to newsletter subscribers
 broadcast NUMBER *FLAGS:

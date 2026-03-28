@@ -1,8 +1,8 @@
 """
 Hallway Track curation agent.
 
-Scans sources for links relevant to the beat (how AI is affecting the practice
-of science), generates a draft edition, and emails a notification.
+Tells Claude Code to scan sources, curate links, and write a draft
+edition file directly to disk.
 
 Usage:
     uv run --with httpx,resend python agent/curate.py
@@ -10,7 +10,6 @@ Usage:
 """
 
 import argparse
-import json
 import os
 import re
 import subprocess
@@ -23,6 +22,7 @@ import resend
 REPO_ROOT = Path(__file__).parent.parent
 SOURCES_FILE = REPO_ROOT / "sources.md"
 EDITIONS_DIR = REPO_ROOT / "src" / "no"
+TEMPLATE_FILE = Path(__file__).parent / "edition-template.md"
 MIN_CONTENT_LENGTH = 100
 DEDUP_EDITIONS = 3
 
@@ -98,8 +98,8 @@ def get_previous_urls(n: int = DEDUP_EDITIONS) -> list[str]:
     return urls
 
 
-def verify_links(content: str) -> str:
-    """Check that URLs in the curated content actually resolve."""
+def verify_links(content: str) -> list[str]:
+    """Check that URLs in the curated content actually resolve. Returns list of broken URLs."""
     urls = extract_urls(content)
     broken = []
     with httpx.Client(timeout=10, follow_redirects=True) as client:
@@ -110,22 +110,22 @@ def verify_links(content: str) -> str:
                     broken.append(f"  {resp.status_code}: {url}")
             except httpx.RequestError:
                 broken.append(f"  UNREACHABLE: {url}")
-    if broken:
-        print(f"Warning: {len(broken)} broken link(s) found:")
-        for b in broken:
-            print(b)
-    return content
+    return broken
 
 
-def build_prompt(sources: list[dict[str, str]], previous_urls: list[str] | None = None) -> str:
-    """Build the curation prompt for Claude Code."""
+def build_prompt(sources: list[dict[str, str]], number: int, date: str,
+                 output_path: Path, previous_urls: list[str] | None = None) -> str:
+    """Build the prompt that tells Claude Code to write the edition file."""
     today = datetime.now().strftime("%Y-%m-%d")
     week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    padded = str(number).zfill(3)
 
     source_list = "\n".join(
         f"- {s['name']}: {s['url']} ({s['description']})"
         for s in sources
     )
+
+    template = TEMPLATE_FILE.read_text()
 
     dedup_block = ""
     if previous_urls:
@@ -136,8 +136,20 @@ ALREADY COVERED (do not include these URLs or stories about the same topic):
 """
 
     return f"""\
-You are a research assistant for The Hallway Track, a weekly curated link \
-roundup on how AI is affecting the practice of science.
+You are writing edition No. {padded} of The Hallway Track, a weekly curated \
+link roundup on how AI is affecting the practice of science.
+
+YOUR JOB:
+1. Search the web for notable developments from {week_ago} to {today} that fit the beat.
+2. Write the edition file to: {output_path}
+
+The file must follow this template exactly:
+```
+{template}
+```
+
+Replace NUMBER with {number}, DATE with {date}, PADDED with {padded}.
+Replace the example sections and links with real content from your search.
 
 TODAY'S DATE: {today}
 SEARCH WINDOW: {week_ago} to {today}
@@ -159,50 +171,28 @@ Good framing: "FutureHouse's literature agent outperformed PhD researchers \
 on retrieval tasks. The benchmark is narrow, but the direction is clear."
 Bad framing: "Exciting developments in AI-assisted literature review this week!"
 
-YOUR TASK:
-Search the web for notable developments from {week_ago} to {today} that fit the beat. \
-For each item found, provide:
-1. The article/post title (as a link in markdown)
-2. A one-sentence framing: why a working researcher should care.
-
-Group items under 2-4 section headings (e.g., "Tools & Infrastructure", \
-"Papers & Methods", "Policy & Practice"). Use ## for headings.
-
-Format each item as a markdown list item with the link as the text, followed \
-by a paragraph with the one-line framing. Like this:
-
-- [Title of the article](https://example.com)
-  One sentence about why this matters to a working researcher.
-
-Aim for 5-10 items total. Quality over quantity. If something is not clearly \
-relevant to the beat, leave it out.
-
-Output ONLY the markdown content. No preamble, no sign-off."""
+RULES:
+- Aim for 5-10 items total. Quality over quantity.
+- Group under 2-4 section headings using ##.
+- Each item is a markdown list item with a linked title, followed by one sentence of framing.
+- If something is not clearly relevant to the beat, leave it out.
+- Write the file to {output_path} using the Write tool.
+- After writing the file, say ONLY "Edition {padded} written to {output_path}" and nothing else."""
 
 
-def scan_and_curate(sources: list[dict[str, str]], previous_urls: list[str] | None = None) -> str:
-    """Use Claude Code to find and curate links."""
-    prompt = build_prompt(sources, previous_urls)
-
+def run_claude(prompt: str) -> tuple[int, str]:
+    """Run Claude Code with the given prompt. Returns (exit_code, output)."""
     result = subprocess.run(
-        ["claude", "-p", prompt, "--output-format", "json"],
+        ["claude", "-p", prompt, "--allowedTools", "WebSearch,WebFetch,Write,Read"],
         capture_output=True,
         text=True,
         timeout=600,
     )
-
-    if result.returncode != 0:
-        raise RuntimeError(f"Claude Code failed (exit {result.returncode}): {result.stderr}")
-
-    try:
-        output = json.loads(result.stdout)
-        return output.get("result", result.stdout)
-    except json.JSONDecodeError:
-        return result.stdout
+    return result.returncode, result.stdout.strip()
 
 
 def write_edition(number: int, date: str, content: str) -> Path:
-    """Write a draft edition markdown file."""
+    """Write a draft edition markdown file (fallback if Claude doesn't write it)."""
     padded = str(number).zfill(3)
     path = EDITIONS_DIR / f"{padded}.md"
 
@@ -240,7 +230,8 @@ def send_notification(number: int, file_path: Path, admin_email: str) -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="Hallway Track curation agent")
-    parser.add_argument("--dry-run", action="store_true", help="Print draft to stdout, skip email")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print what would happen without scanning or writing anything")
     args = parser.parse_args()
 
     sources = parse_sources()
@@ -250,42 +241,61 @@ def main():
 
     number = next_edition_number()
     date = next_publish_date()
+    padded = str(number).zfill(3)
+    output_path = EDITIONS_DIR / f"{padded}.md"
     previous_urls = get_previous_urls()
+
+    if args.dry_run:
+        print(f"Would scan {len(sources)} sources")
+        print(f"Would write edition No. {padded} to {output_path}")
+        print(f"Publish date: {date}")
+        if previous_urls:
+            print(f"Would exclude {len(previous_urls)} URLs from recent editions")
+        return
 
     if previous_urls:
         print(f"Dedup: excluding {len(previous_urls)} URLs from recent editions")
 
-    print(f"Scanning sources for edition No. {str(number).zfill(3)}...")
+    print(f"Scanning sources for edition No. {padded}...")
+    prompt = build_prompt(sources, number, date, output_path, previous_urls)
+
     try:
-        content = scan_and_curate(sources, previous_urls)
-    except (RuntimeError, subprocess.TimeoutExpired) as e:
-        print(f"Error: {e}")
+        exit_code, output = run_claude(prompt)
+    except subprocess.TimeoutExpired:
+        print("Error: Claude Code timed out after 10 minutes.")
         return
 
+    print(f"Claude: {output}")
+
+    if exit_code != 0:
+        print(f"Error: Claude Code exited with code {exit_code}")
+        return
+
+    if not output_path.exists():
+        print(f"Error: Expected file {output_path} was not created.")
+        return
+
+    content = output_path.read_text()
     if len(content.strip()) < MIN_CONTENT_LENGTH:
-        print(
-            f"Error: Agent returned insufficient content "
-            f"({len(content.strip())} chars, minimum {MIN_CONTENT_LENGTH}). Aborting."
-        )
+        print(f"Error: Edition file is too short ({len(content.strip())} chars). Review manually.")
         return
 
-    verify_links(content)
+    broken = verify_links(content)
+    if broken:
+        print(f"Warning: {len(broken)} broken link(s) found:")
+        for b in broken:
+            print(b)
 
-    path = write_edition(number, date, content)
-    print(f"Draft written to {path}")
+    print(f"Draft written to {output_path}")
 
-    if args.dry_run:
-        print("\n--- DRAFT ---\n")
-        print(path.read_text())
-    else:
-        api_key = os.environ.get("RESEND_API_KEY")
-        admin_email = os.environ.get("ADMIN_EMAIL", "hello@aris.pub")
-        if not api_key:
-            print("Warning: RESEND_API_KEY not set, skipping email notification")
-            return
-        resend.api_key = api_key
-        send_notification(number, path, admin_email)
-        print(f"Notification sent to {admin_email}")
+    api_key = os.environ.get("RESEND_API_KEY")
+    admin_email = os.environ.get("ADMIN_EMAIL", "hello@aris.pub")
+    if not api_key:
+        print("Warning: RESEND_API_KEY not set, skipping email notification")
+        return
+    resend.api_key = api_key
+    send_notification(number, output_path, admin_email)
+    print(f"Notification sent to {admin_email}")
 
 
 if __name__ == "__main__":

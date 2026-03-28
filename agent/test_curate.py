@@ -183,13 +183,13 @@ class TestGetPreviousUrls:
 
 
 class TestVerifyLinks:
-    def test_returns_content_unchanged(self):
+    def test_no_broken_links(self):
         content = "- [Example](https://httpbin.org/status/200)"
-        assert verify_links(content) == content
+        assert verify_links(content) == []
 
     def test_content_with_no_links(self):
         content = "No links here."
-        assert verify_links(content) == content
+        assert verify_links(content) == []
 
 
 class TestMinContentLength:

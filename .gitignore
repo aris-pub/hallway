@@ -1,6 +1,6 @@
 node_modules/
 _site/
-agent/.env
+.env
 agent/.venv/
 
 # Dolt database files (added by bd init)
