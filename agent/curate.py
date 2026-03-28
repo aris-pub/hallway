@@ -5,17 +5,18 @@ Scans sources for links relevant to the beat (how AI is affecting the practice
 of science), generates a draft edition, and emails a notification.
 
 Usage:
-    uv run --with anthropic,httpx,resend python agent/curate.py
-    uv run --with anthropic,httpx,resend python agent/curate.py --dry-run
+    uv run --with httpx,resend python agent/curate.py
+    uv run --with httpx,resend python agent/curate.py --dry-run
 """
 
 import argparse
+import json
 import os
 import re
+import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import anthropic
 import httpx
 import resend
 
@@ -116,10 +117,8 @@ def verify_links(content: str) -> str:
     return content
 
 
-def scan_and_curate(sources: list[dict[str, str]], previous_urls: list[str] | None = None) -> str:
-    """Use Claude with web search to find and curate links."""
-    client = anthropic.Anthropic()
-
+def build_prompt(sources: list[dict[str, str]], previous_urls: list[str] | None = None) -> str:
+    """Build the curation prompt for Claude Code."""
     today = datetime.now().strftime("%Y-%m-%d")
     week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 
@@ -136,13 +135,7 @@ ALREADY COVERED (do not include these URLs or stories about the same topic):
 {url_list}
 """
 
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=4096,
-        tools=[{"type": "web_search_20250305"}],
-        messages=[{
-            "role": "user",
-            "content": f"""\
+    return f"""\
 You are a research assistant for The Hallway Track, a weekly curated link \
 roundup on how AI is affecting the practice of science.
 
@@ -152,7 +145,7 @@ SEARCH WINDOW: {week_ago} to {today}
 THE BEAT:
 {BEAT}
 
-SOURCES TO CHECK (prioritize these, use open web search to fill gaps):
+SOURCES TO CHECK (prioritize these, use web search to fill gaps):
 {source_list}
 {dedup_block}
 VOICE:
@@ -167,7 +160,7 @@ on retrieval tasks. The benchmark is narrow, but the direction is clear."
 Bad framing: "Exciting developments in AI-assisted literature review this week!"
 
 YOUR TASK:
-Search for notable developments from {week_ago} to {today} that fit the beat. \
+Search the web for notable developments from {week_ago} to {today} that fit the beat. \
 For each item found, provide:
 1. The article/post title (as a link in markdown)
 2. A one-sentence framing: why a working researcher should care.
@@ -182,15 +175,30 @@ by a paragraph with the one-line framing. Like this:
   One sentence about why this matters to a working researcher.
 
 Aim for 5-10 items total. Quality over quantity. If something is not clearly \
-relevant to the beat, leave it out.""",
-        }],
+relevant to the beat, leave it out.
+
+Output ONLY the markdown content. No preamble, no sign-off."""
+
+
+def scan_and_curate(sources: list[dict[str, str]], previous_urls: list[str] | None = None) -> str:
+    """Use Claude Code to find and curate links."""
+    prompt = build_prompt(sources, previous_urls)
+
+    result = subprocess.run(
+        ["claude", "-p", prompt, "--output-format", "json"],
+        capture_output=True,
+        text=True,
+        timeout=600,
     )
 
-    text_parts = []
-    for block in response.content:
-        if block.type == "text":
-            text_parts.append(block.text)
-    return "\n".join(text_parts)
+    if result.returncode != 0:
+        raise RuntimeError(f"Claude Code failed (exit {result.returncode}): {result.stderr}")
+
+    try:
+        output = json.loads(result.stdout)
+        return output.get("result", result.stdout)
+    except json.JSONDecodeError:
+        return result.stdout
 
 
 def write_edition(number: int, date: str, content: str) -> Path:
@@ -250,11 +258,8 @@ def main():
     print(f"Scanning sources for edition No. {str(number).zfill(3)}...")
     try:
         content = scan_and_curate(sources, previous_urls)
-    except anthropic.APIError as e:
-        print(f"Error: Anthropic API call failed: {e}")
-        return
-    except anthropic.AuthenticationError:
-        print("Error: Invalid ANTHROPIC_API_KEY. Aborting.")
+    except (RuntimeError, subprocess.TimeoutExpired) as e:
+        print(f"Error: {e}")
         return
 
     if len(content.strip()) < MIN_CONTENT_LENGTH:

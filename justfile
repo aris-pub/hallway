@@ -11,7 +11,7 @@ deploy: build
 
 # Run the curation agent (generates a draft edition)
 agent *FLAGS:
-    uv run --with anthropic,httpx,resend python agent/curate.py {{FLAGS}}
+    uv run --with httpx,resend python agent/curate.py {{FLAGS}}
 
 # Run the curation agent in dry-run mode (no email)
 agent-dry:
@@ -23,7 +23,7 @@ broadcast NUMBER *FLAGS:
 
 # Run tests
 test:
-    uv run --with anthropic,httpx,resend,pytest pytest agent/test_curate.py -v
+    uv run --with httpx,resend,pytest pytest agent/test_curate.py -v
 
 # Start local dev server
 dev:
