@@ -81,17 +81,17 @@ def markdown_to_html(edition: dict) -> str:
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #0a0a0a; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #AD71F2; margin: 0; font-weight: 400;">The Hallway Track</h1>
-        <p style="color: #6b7280; margin: 5px 0 0 0;">No. {edition["number"]}</p>
+        <p style="color: #7a7a7a; margin: 5px 0 0 0;">No. {edition["number"]}</p>
     </div>
 
-    <div style="background: #f8fafc; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #AD71F2;">
+    <div style="background: #fafaf8; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #AD71F2;">
         {content}
     </div>
 
-    <div style="text-align: center; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+    <div style="text-align: center; color: #7a7a7a; font-size: 14px; border-top: 1px solid #e8e8e4; padding-top: 20px;">
         <p><a href="{edition["url"]}" style="color: #AD71F2;">Read online</a></p>
         <p style="margin-top: 15px; font-size: 12px;">
             Part of <a href="https://aris.pub" style="color: #AD71F2;">The Aris Program</a>

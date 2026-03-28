@@ -36,6 +36,7 @@
         --bg-card: #1a1a18;
         --bg-subtle: #141412;
         --border-light: #2a2a26;
+        --accent-dark: #AD71F2;
     }
 }
 
@@ -47,6 +48,7 @@
     --bg-card: #1a1a18;
     --bg-subtle: #141412;
     --border-light: #2a2a26;
+    --accent-dark: #AD71F2;
 }
 
 html {
@@ -262,7 +264,7 @@ nav a:hover {
 }
 
 .homepage-byline a {
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
 }
 
 .homepage-byline a:hover {
