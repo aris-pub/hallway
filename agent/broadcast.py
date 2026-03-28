@@ -96,6 +96,9 @@ def markdown_to_html(edition: dict) -> str:
         <p style="margin-top: 15px; font-size: 12px;">
             Part of <a href="https://aris.pub" style="color: #AD71F2;">The Aris Program</a>
         </p>
+        <p style="margin-top: 10px; font-size: 11px;">
+            <a href="{{{{{{RESEND_UNSUBSCRIBE_URL}}}}}}" style="color: #7a7a7a;">Unsubscribe</a>
+        </p>
     </div>
 </body>
 </html>"""
