@@ -10,12 +10,21 @@ draft: true
 ## Section Heading
 
 - [Article title](https://example.com)
+
+  *Source Name, March 25 2026*
+
   One sentence about why this matters to a working researcher.
 
 - [Another article](https://example.com)
+
+  *Source Name, March 25 2026*
+
   One sentence framing.
 
 ## Another Section
 
 - [Article title](https://example.com)
+
+  *Source Name, March 25 2026*
+
   One sentence framing.

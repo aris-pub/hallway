@@ -10,11 +10,16 @@ description: "How AI is affecting the practice of science. A weekly curated link
 {% if editions.length %}
 {% set latest = editions[0] %}
 <a href="{{ latest.url }}" class="latest-edition">
-    <span class="latest-label">Latest</span>
-    <span class="latest-number">No. {{ latest.data.number | padStart(3) }}</span>
-    <span class="latest-date">{{ latest.date | dateFormat }}</span>
-    {% if latest.data.title %}
-    <span class="latest-title">{{ latest.data.title }}</span>
+    <span class="latest-row-1">
+        <span class="latest-label">Latest</span>
+        <span class="latest-date">{{ latest.date | dateFormat }}</span>
+    </span>
+    <span class="latest-row-2">
+        <span class="latest-number">No. {{ latest.data.number | padStart(3) }}</span>
+        {% if latest.data.title %}<span class="latest-title">{{ latest.data.title }}</span>{% endif %}
+    </span>
+    {% if latest.content | trim %}
+    <span class="latest-excerpt">{{ latest.content | excerpt | safe }}</span>
     {% endif %}
 </a>
 {% endif %}

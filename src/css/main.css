@@ -191,11 +191,15 @@ nav a:hover {
     letter-spacing: 0.05em;
     color: var(--text-tertiary);
     margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-light);
     margin-bottom: var(--space-sm);
 }
 
 .edition-body h2:first-child {
     margin-top: 0;
+    padding-top: 0;
+    border-top: none;
 }
 
 .edition-body ul {
@@ -204,17 +208,34 @@ nav a:hover {
 }
 
 .edition-body li {
-    margin-bottom: var(--space-sm);
-    padding-bottom: var(--space-sm);
-    border-bottom: 1px solid var(--border-light);
+    margin-bottom: var(--space-md);
 }
 
 .edition-body li:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.edition-body li p {
+    margin-bottom: 0.35rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.edition-body li > p:first-child a {
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.edition-body li em {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    font-style: normal;
 }
 
 .edition-body p {
     margin-bottom: var(--space-sm);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
 }
 
 /* Homepage */
@@ -261,14 +282,28 @@ nav a:hover {
     color: var(--accent);
 }
 
+.latest-row-1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.25rem;
+}
+
 .latest-label {
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-tertiary);
+}
+
+.latest-date {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+}
+
+.latest-row-2 {
     display: block;
-    margin-bottom: 0.25rem;
 }
 
 .latest-number {
@@ -277,17 +312,18 @@ nav a:hover {
     font-weight: 400;
 }
 
-.latest-date {
-    font-size: 0.9rem;
-    color: var(--text-tertiary);
+.latest-title {
+    color: var(--text-secondary);
     margin-left: 0.75rem;
+    font-size: 0.95rem;
 }
 
-.latest-title {
+.latest-excerpt {
     display: block;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
-    font-size: 0.95rem;
+    color: var(--text-tertiary);
+    margin-top: var(--space-xs);
+    font-size: 0.9rem;
+    line-height: 1.5;
 }
 
 /* Archive */

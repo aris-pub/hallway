@@ -176,7 +176,11 @@ Bad framing: "Exciting developments in AI-assisted literature review this week!"
 RULES:
 - Aim for 5-10 items total. Quality over quantity.
 - Group under 2-4 section headings using ##.
-- Each item is a markdown list item with a linked title, followed by one sentence of framing.
+- Each item is a markdown list item with three parts separated by BLANK LINES:
+  1. The linked title
+  2. A byline in italics: *Source Name, Month Day Year*
+  3. One sentence of editorial framing
+  The blank lines between parts are critical for correct rendering.
 - If something is not clearly relevant to the beat, leave it out.
 - Write the file to {output_path} using the Write tool.
 - After writing the file, say ONLY "Edition {padded} written to {output_path}" and nothing else."""
