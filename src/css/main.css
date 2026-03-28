@@ -213,13 +213,33 @@ nav a:hover {
 /* Homepage */
 
 .homepage-blurb {
-    color: var(--text-secondary);
-    font-size: 1.05rem;
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.5rem;
+}
+
+.homepage-byline {
+    color: var(--text-tertiary);
+    font-size: 0.95rem;
     margin-bottom: var(--space-md);
+}
+
+.homepage-byline a {
+    color: var(--text-tertiary);
+}
+
+.homepage-byline a:hover {
+    color: var(--accent);
 }
 
 .latest-edition {
     margin-bottom: var(--space-md);
+    padding: var(--space-sm);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
 }
 
 .latest-link {
@@ -233,7 +253,7 @@ nav a:hover {
 }
 
 .latest-label {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
