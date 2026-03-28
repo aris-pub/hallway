@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import anthropic
+import httpx
 import resend
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -72,9 +73,31 @@ def next_publish_date() -> str:
     return (today + timedelta(days=days_ahead)).strftime("%Y-%m-%d")
 
 
+def verify_links(content: str) -> str:
+    """Check that URLs in the curated content actually resolve."""
+    urls = re.findall(r"\[.+?\]\((https?://[^\)]+)\)", content)
+    broken = []
+    with httpx.Client(timeout=10, follow_redirects=True) as client:
+        for url in urls:
+            try:
+                resp = client.head(url)
+                if resp.status_code >= 400:
+                    broken.append(f"  {resp.status_code}: {url}")
+            except httpx.RequestError:
+                broken.append(f"  UNREACHABLE: {url}")
+    if broken:
+        print(f"Warning: {len(broken)} broken link(s) found:")
+        for b in broken:
+            print(b)
+    return content
+
+
 def scan_and_curate(sources: list[dict[str, str]]) -> str:
     """Use Claude with web search to find and curate links."""
     client = anthropic.Anthropic()
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 
     source_list = "\n".join(
         f"- {s['name']}: {s['url']} ({s['description']})"
@@ -91,18 +114,31 @@ def scan_and_curate(sources: list[dict[str, str]]) -> str:
 You are a research assistant for The Hallway Track, a weekly curated link \
 roundup on how AI is affecting the practice of science.
 
+TODAY'S DATE: {today}
+SEARCH WINDOW: {week_ago} to {today}
+
 THE BEAT:
 {BEAT}
 
-SOURCES TO CHECK (search these and beyond):
+SOURCES TO CHECK (prioritize these, use open web search to fill gaps):
 {source_list}
 
+VOICE:
+Write as a researcher speaking to researchers. No excitement, no alarm. \
+Name the specific thing that happened and why it matters. Avoid words like \
+"exciting," "groundbreaking," "game-changing," "revolutionizing." If you \
+can't explain why a researcher should care in one concrete sentence, leave \
+it out.
+
+Good framing: "FutureHouse's literature agent outperformed PhD researchers \
+on retrieval tasks. The benchmark is narrow, but the direction is clear."
+Bad framing: "Exciting developments in AI-assisted literature review this week!"
+
 YOUR TASK:
-Search for notable developments from the past 7 days that fit the beat. \
+Search for notable developments from {week_ago} to {today} that fit the beat. \
 For each item found, provide:
 1. The article/post title (as a link in markdown)
-2. A one-sentence framing: why a working researcher should care. Be direct \
-and opinionated. No hype.
+2. A one-sentence framing: why a working researcher should care.
 
 Group items under 2-4 section headings (e.g., "Tools & Infrastructure", \
 "Papers & Methods", "Policy & Practice"). Use ## for headings.
@@ -173,6 +209,12 @@ def main():
 
     print(f"Scanning sources for edition No. {str(number).zfill(3)}...")
     content = scan_and_curate(sources)
+
+    if len(content.strip()) < 100:
+        print("Error: Agent returned insufficient content. Aborting.")
+        return
+
+    verify_links(content)
 
     path = write_edition(number, date, content)
     print(f"Draft written to {path}")

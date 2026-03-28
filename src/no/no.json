@@ -1,5 +1,0 @@
-{
-  "layout": "edition.njk",
-  "tags": "edition",
-  "permalink": "/no/{{ number | padStart(3) }}/"
-}

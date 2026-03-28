@@ -25,6 +25,10 @@ module.exports = function(eleventyConfig) {
     return stripped.substring(0, 200).trim() + (stripped.length > 200 ? "..." : "");
   });
 
+  eleventyConfig.addCollection("edition", function(collectionApi) {
+    return collectionApi.getFilteredByTag("edition").filter(item => !item.data.draft);
+  });
+
   eleventyConfig.addFilter("absoluteUrl", (url, base) => {
     if (!base) return url;
     return new URL(url, base).toString();

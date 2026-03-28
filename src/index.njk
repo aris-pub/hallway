@@ -39,12 +39,14 @@ description: "How AI is affecting the practice of science. A weekly curated link
     <h2 class="archive-heading">Archive</h2>
     <ul class="edition-list">
         {% for post in editions %}
+        {% if not loop.first %}
         <li>
             <a href="{{ post.url }}">
                 <span class="edition-list-number">No. {{ post.data.number | padStart(3) }}</span>
                 <span class="edition-list-date">{{ post.date | dateFormat }}</span>
             </a>
         </li>
+        {% endif %}
         {% endfor %}
     </ul>
 </div>
