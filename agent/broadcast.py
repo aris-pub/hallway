@@ -83,18 +83,18 @@ def markdown_to_html(edition: dict) -> str:
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #0a0a0a; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #AD71F2; margin: 0; font-weight: 400;">The Hallway Track</h1>
+        <h1 style="color: #157067; margin: 0; font-weight: 400;">The Hallway Track</h1>
         <p style="color: #7a7a7a; margin: 5px 0 0 0;">No. {edition["number"]}</p>
     </div>
 
-    <div style="background: #fafaf8; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #AD71F2;">
+    <div style="background: #f7f9f8; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #157067;">
         {content}
     </div>
 
     <div style="text-align: center; color: #7a7a7a; font-size: 14px; border-top: 1px solid #e8e8e4; padding-top: 20px;">
-        <p><a href="{edition["url"]}" style="color: #AD71F2;">Read online</a></p>
+        <p><a href="{edition["url"]}" style="color: #157067;">Read online</a></p>
         <p style="margin-top: 15px; font-size: 12px;">
-            Part of <a href="https://aris.pub" style="color: #AD71F2;">The Aris Program</a>
+            Part of <a href="https://aris.pub" style="color: #157067;">The Aris Program</a>
         </p>
         <p style="margin-top: 10px; font-size: 11px;">
             <a href="{{{{{{RESEND_UNSUBSCRIBE_URL}}}}}}" style="color: #7a7a7a;">Unsubscribe</a>

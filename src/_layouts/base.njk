@@ -6,7 +6,7 @@
     <title>{% if pageTitle %}{{ pageTitle }} - {{ metadata.title }}{% else %}{{ metadata.title }}{% endif %}</title>
     <meta name="description" content="{{ description or metadata.description }}">
     <meta name="author" content="{{ metadata.author.name }}">
-    <meta name="theme-color" content="#AD71F2">
+    <meta name="theme-color" content="#157067">
 
     <meta property="og:type" content="{% if number %}article{% else %}website{% endif %}">
     <meta property="og:url" content="{{ page.url | url | absoluteUrl(metadata.url) }}">
