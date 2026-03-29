@@ -1,16 +1,14 @@
 set dotenv-load
 export PATH := env("HOME") + "/.local/bin:" + env("PATH")
 
-# Build the site locally (generate og:images + 11ty build)
-build:
+# Publish an edition: build site, deploy, email subscribers
+publish NUMBER:
     node scripts/gen-og-images.js
     npm run build
-
-# Deploy: build, commit, push
-deploy: build
     git add -A
-    git commit -m "Deploy $(date +%Y-%m-%d)" || true
+    git commit -m "Publish No. {{NUMBER}}" || true
     git push
+    uv run --with resend,httpx python agent/broadcast.py {{NUMBER}}
 
 # Run the curation agent (scans sources, writes draft, sends notification email)
 agent:
@@ -19,10 +17,6 @@ agent:
 # Preview what the agent would do without scanning or writing
 agent-dry:
     uv run --with httpx,resend python agent/curate.py --dry-run
-
-# Broadcast an edition to newsletter subscribers
-broadcast NUMBER *FLAGS:
-    uv run --with resend,httpx python agent/broadcast.py {{NUMBER}} {{FLAGS}}
 
 # Run tests
 test:
