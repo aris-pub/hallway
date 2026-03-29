@@ -50,20 +50,39 @@ bd close <id>         # Complete work
 <!-- END BEADS INTEGRATION -->
 
 
-## Build & Test
+## Weekly Workflow
 
-_Add your build and test commands here_
+1. **Saturday night** - Cron runs `just agent` on syenite. Writes draft, commits, pushes, emails notification to hello@aris.pub.
+2. **Sunday** - `git pull` on laptop. Review `src/no/NNN.md`, edit content, remove `draft: true` from frontmatter.
+3. **Monday** - `just publish NNN` (builds og:images, builds site, deploys to Netlify, emails subscribers).
+4. **Monday** - Post on Bluesky and LinkedIn. Lead with strongest single link, not "new edition out."
+
+## Commands
 
 ```bash
-# Example:
-# npm install
-# npm test
+just publish NNN   # Build, deploy, email subscribers
+just agent         # Run curation agent (normally via cron)
+just agent-dry     # Preview what agent would do
+just test          # Run pytest
+just dev           # Local dev server
 ```
 
-## Architecture Overview
+## Architecture
 
-_Add a brief overview of your project architecture_
+- **Site**: 11ty (Eleventy) static site, Netlify hosting, hallway.aris.pub
+- **Agent**: Python script using Claude Code CLI for web search + curation
+- **Newsletter**: Resend (contacts, segments, broadcasts). Netlify Function for signups.
+- **Analytics**: Umami Cloud (free tier)
+- **Sources**: Defined in sources.md (28 sources)
+- **Prompt**: Agent prompt in agent/prompt.txt
+- **Template**: Edition format in agent/edition-template.md
+- **Cron**: Runs on syenite (home server), Saturday night
 
-## Conventions & Patterns
+## Conventions
 
-_Add your project-specific conventions here_
+- Editions are called "editions", not "issues" or "numbers"
+- No em dashes anywhere
+- Edition URLs: /no/001/, /no/002/, etc.
+- Footer: "Part of The Aris Program" (never Leo's name)
+- Voice: researcher to researcher, no hype, no excitement
+- `draft: true` in frontmatter prevents rendering and collection inclusion
