@@ -1,4 +1,5 @@
 set dotenv-load
+export PATH := env("HOME") + "/.local/bin:" + env("PATH")
 
 # Build the site locally (generate og:images + 11ty build)
 build:
