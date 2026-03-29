@@ -92,7 +92,7 @@ exports.handler = async (event) => {
         <h1 style="color: #157067; margin: 0; font-weight: 400;">The Hallway Track</h1>
     </div>
 
-    <div style="background: #f7f9f8; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #157067;">
+    <div style="background: #f5f7f6; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #157067;">
         <p style="font-size: 16px; margin: 0 0 20px 0;">You're subscribed to The Hallway Track, a weekly curated link roundup on how AI is affecting the practice of science.</p>
         <p style="font-size: 16px; margin: 0;">Each edition will arrive in your inbox on Mondays.</p>
     </div>

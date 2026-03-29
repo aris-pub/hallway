@@ -87,7 +87,7 @@ def markdown_to_html(edition: dict) -> str:
         <p style="color: #7a7a7a; margin: 5px 0 0 0;">No. {edition["number"]}</p>
     </div>
 
-    <div style="background: #f7f9f8; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #157067;">
+    <div style="background: #f5f7f6; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #157067;">
         {content}
     </div>
 
