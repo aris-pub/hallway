@@ -260,6 +260,15 @@ def main():
 
     print(f"Draft written to {output_path}")
 
+    # Commit and push draft so it can be reviewed from any machine
+    subprocess.run(["git", "add", str(output_path)], cwd=REPO_ROOT)
+    subprocess.run(
+        ["git", "commit", "-m", f"Draft: No. {padded}"],
+        cwd=REPO_ROOT,
+    )
+    subprocess.run(["git", "push"], cwd=REPO_ROOT)
+    print("Draft committed and pushed")
+
     api_key = os.environ.get("RESEND_API_KEY")
     admin_email = os.environ.get("ADMIN_EMAIL", "hello@aris.pub")
     if not api_key:
