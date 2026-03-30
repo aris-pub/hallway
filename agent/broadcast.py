@@ -60,13 +60,21 @@ def markdown_to_html(edition: dict) -> str:
     body = edition["body"]
     lines = body.split("\n")
     html_parts = []
+    first_h2 = True
     for line in lines:
         if line.startswith("## "):
-            html_parts.append(
-                f'<h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; '
-                f'letter-spacing: 0.05em; color: #7a7a7a; margin: 32px 0 16px 0; '
-                f'padding-top: 24px; border-top: 1px solid #e2e8e6;">{line[3:]}</h2>'
-            )
+            if first_h2:
+                html_parts.append(
+                    f'<h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; '
+                    f'letter-spacing: 0.05em; color: #7a7a7a; margin: 0 0 16px 0;">{line[3:]}</h2>'
+                )
+                first_h2 = False
+            else:
+                html_parts.append(
+                    f'<h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; '
+                    f'letter-spacing: 0.05em; color: #7a7a7a; margin: 32px 0 16px 0; '
+                    f'padding-top: 24px; border-top: 1px solid #e2e8e6;">{line[3:]}</h2>'
+                )
         elif line.startswith("- ["):
             match = re.match(r"- \[(.+?)\]\((.+?)\)(.*)", line)
             if match:
