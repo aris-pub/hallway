@@ -47,6 +47,14 @@ def read_edition(number: str) -> dict:
     }
 
 
+def process_inline(text: str) -> str:
+    """Process inline markdown: *italic*, **bold**, [links](url)."""
+    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
+    text = re.sub(r"\*(.+?)\*", r'<em style="font-size: 14px; color: #7a7a7a; font-style: italic;">\1</em>', text)
+    text = re.sub(r"\[(.+?)\]\((.+?)\)", r'<a href="\2" style="color: #157067;">\1</a>', text)
+    return text
+
+
 def markdown_to_html(edition: dict) -> str:
     """Convert edition markdown to simple HTML for email."""
     body = edition["body"]
@@ -54,23 +62,27 @@ def markdown_to_html(edition: dict) -> str:
     html_parts = []
     for line in lines:
         if line.startswith("## "):
-            html_parts.append(f"<h2>{line[3:]}</h2>")
+            html_parts.append(
+                f'<h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; '
+                f'letter-spacing: 0.05em; color: #7a7a7a; margin: 32px 0 16px 0; '
+                f'padding-top: 24px; border-top: 1px solid #e2e8e6;">{line[3:]}</h2>'
+            )
         elif line.startswith("- ["):
             match = re.match(r"- \[(.+?)\]\((.+?)\)(.*)", line)
             if match:
                 title, url, rest = match.groups()
-                html_parts.append(f'<p><strong><a href="{url}">{title}</a></strong>{rest}</p>')
+                html_parts.append(f'<p style="margin: 0 0 4px 0;"><strong><a href="{url}" style="color: #157067;">{title}</a></strong>{process_inline(rest)}</p>')
             else:
-                html_parts.append(f"<p>{line[2:]}</p>")
+                html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(line[2:])}</p>')
         elif line.strip().startswith("["):
             match = re.match(r"\s*\[(.+?)\]\((.+?)\)(.*)", line)
             if match:
                 title, url, rest = match.groups()
-                html_parts.append(f'<p><strong><a href="{url}">{title}</a></strong>{rest}</p>')
+                html_parts.append(f'<p style="margin: 0 0 4px 0;"><strong><a href="{url}" style="color: #157067;">{title}</a></strong>{process_inline(rest)}</p>')
             else:
-                html_parts.append(f"<p>{line.strip()}</p>")
+                html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(line.strip())}</p>')
         elif line.strip():
-            html_parts.append(f"<p>{line.strip()}</p>")
+            html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(line.strip())}</p>')
 
     content = "\n".join(html_parts)
 
@@ -81,17 +93,17 @@ def markdown_to_html(edition: dict) -> str:
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #0a0a0a; max-width: 600px; margin: 0 auto; padding: 20px;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; line-height: 1.6; color: #0a0a0a; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #157067; margin: 0; font-weight: 400;">The Hallway Track</h1>
-        <p style="color: #7a7a7a; margin: 5px 0 0 0;">No. {edition["number"]}</p>
+        <p style="color: #7a7a7a; margin: 5px 0 0 0; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase;">No. {edition["number"]}</p>
     </div>
 
-    <div style="background: #f5f7f6; border-radius: 12px; padding: 30px; margin-bottom: 30px; border-left: 4px solid #157067;">
+    <div style="background: #ffffff; border-radius: 8px; padding: 30px; margin-bottom: 30px; border: 1px solid #e2e8e6; border-top: 3px solid #157067;">
         {content}
     </div>
 
-    <div style="text-align: center; color: #7a7a7a; font-size: 14px; border-top: 1px solid #e8e8e4; padding-top: 20px;">
+    <div style="text-align: center; color: #7a7a7a; font-size: 14px; border-top: 1px solid #e2e8e6; padding-top: 20px;">
         <p><a href="{edition["url"]}" style="color: #157067;">Read online</a></p>
         <p style="margin-top: 15px; font-size: 12px;">
             Part of <a href="https://aris.pub" style="color: #157067;">The Aris Program</a>
