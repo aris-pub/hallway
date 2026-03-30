@@ -109,6 +109,17 @@ exports.handler = async (event) => {
     console.error("Failed to send confirmation:", err.message);
   }
 
+  try {
+    await resendRequest("/emails", {
+      from: "The Hallway Track <hallway@updates.aris.pub>",
+      to: ["hello@aris.pub"],
+      subject: `New subscriber: ${email}`,
+      text: `${email} just subscribed to The Hallway Track.`,
+    });
+  } catch (err) {
+    console.error("Failed to send admin notification:", err.message);
+  }
+
   return {
     statusCode: 302,
     headers: { Location: "/subscribed/" },
