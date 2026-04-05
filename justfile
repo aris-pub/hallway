@@ -1,15 +1,9 @@
 set dotenv-load
 export PATH := env("HOME") + "/.local/bin:" + env("PATH")
 
-# Publish an edition: remove draft, build, deploy, email subscribers
+# Publish an edition (defers to Monday 9am if run on weekends, immediate on Monday+)
 publish NUMBER:
-    sed -i '' '/^draft: true$/d' src/no/{{NUMBER}}.md
-    node scripts/gen-og-images.js
-    npm run build
-    git add -A
-    git commit -m "Publish No. {{NUMBER}}"
-    git push
-    uv run --with resend,httpx python agent/broadcast.py {{NUMBER}}
+    ./scripts/publish.sh {{NUMBER}}
 
 # Run the curation agent (scans sources, writes draft, sends notification email)
 agent:
