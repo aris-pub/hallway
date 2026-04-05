@@ -32,6 +32,7 @@ Bad framing: "Exciting developments in AI-assisted literature review this week!"
 
 RULES:
 - Aim for 5-10 items total. Quality over quantity.
+- No more than 2 links from the same outlet per edition. Diversify sources.
 - Group under 2-4 section headings using ##.
 - Each item is a markdown list item with three parts separated by BLANK LINES:
   1. The linked title
