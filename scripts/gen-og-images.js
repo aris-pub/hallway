@@ -56,6 +56,19 @@ async function main() {
     const svg = makeSvg(number, title, date);
     await sharp(Buffer.from(svg)).resize(1200, 630).png().toFile(outPath);
     console.log(`Generated ${outPath}`);
+
+    // Small/bold variant for LinkedIn
+    const smallDir = path.join(IMAGES_DIR, "sm");
+    fs.mkdirSync(smallDir, { recursive: true });
+    const smallPath = path.join(smallDir, `${number}.png`);
+    const smallSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <rect x="0" y="0" width="1200" height="6" fill="#157067"/>
+  <text x="600" y="250" font-family="Georgia, Garamond, serif" font-size="120" font-weight="400" fill="#0a0a0a" letter-spacing="-3" text-anchor="middle">No. ${number}</text>
+  <text x="600" y="380" font-family="sans-serif" font-size="36" fill="#157067" text-anchor="middle">The Hallway Track</text>
+</svg>`;
+    await sharp(Buffer.from(smallSvg)).resize(1200, 630).png().toFile(smallPath);
+    console.log(`Generated ${smallPath}`);
   }
 
   // Default image

@@ -1,0 +1,25 @@
+---
+pagination:
+  data: collections.edition
+  size: 1
+  alias: edition
+permalink: "/no/{{ edition.data.number | padStart(3) }}/li/"
+eleventyExcludeFromCollections: true
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=/no/{{ edition.data.number | padStart(3) }}/">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ metadata.url }}/no/{{ edition.data.number | padStart(3) }}/">
+    <meta property="og:title" content="No. {{ edition.data.number | padStart(3) }} - {{ metadata.title }}">
+    <meta property="og:description" content="{{ edition.data.description or metadata.description }}">
+    <meta property="og:image" content="{{ metadata.url }}/images/og/sm/{{ edition.data.number | padStart(3) }}.png">
+    <link rel="canonical" href="{{ metadata.url }}/no/{{ edition.data.number | padStart(3) }}/">
+    <title>Redirecting...</title>
+</head>
+<body>
+    <p>Redirecting to <a href="/no/{{ edition.data.number | padStart(3) }}/">No. {{ edition.data.number | padStart(3) }}</a>...</p>
+</body>
+</html>
