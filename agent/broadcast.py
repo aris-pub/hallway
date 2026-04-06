@@ -58,39 +58,45 @@ def process_inline(text: str) -> str:
 def markdown_to_html(edition: dict) -> str:
     """Convert edition markdown to simple HTML for email."""
     body = edition["body"]
-    lines = body.split("\n")
+
+    # Join continuation lines into paragraphs (split on blank lines)
+    paragraphs = []
+    current = []
+    for line in body.split("\n"):
+        if line.strip() == "":
+            if current:
+                paragraphs.append(" ".join(current))
+                current = []
+        else:
+            current.append(line.strip())
+    if current:
+        paragraphs.append(" ".join(current))
+
     html_parts = []
     first_h2 = True
-    for line in lines:
-        if line.startswith("## "):
+    for para in paragraphs:
+        if para.startswith("## "):
             if first_h2:
                 html_parts.append(
                     f'<h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; '
-                    f'letter-spacing: 0.05em; color: #7a7a7a; margin: 0 0 16px 0;">{line[3:]}</h2>'
+                    f'letter-spacing: 0.05em; color: #7a7a7a; margin: 0 0 16px 0;">{para[3:]}</h2>'
                 )
                 first_h2 = False
             else:
                 html_parts.append(
                     f'<h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; '
                     f'letter-spacing: 0.05em; color: #7a7a7a; margin: 32px 0 16px 0; '
-                    f'padding-top: 24px; border-top: 1px solid #e2e8e6;">{line[3:]}</h2>'
+                    f'padding-top: 24px; border-top: 1px solid #e2e8e6;">{para[3:]}</h2>'
                 )
-        elif line.startswith("- ["):
-            match = re.match(r"- \[(.+?)\]\((.+?)\)(.*)", line)
+        elif para.startswith("- ["):
+            match = re.match(r"- \[(.+?)\]\((.+?)\)(.*)", para)
             if match:
                 title, url, rest = match.groups()
                 html_parts.append(f'<p style="margin: 0 0 4px 0;"><strong><a href="{url}" style="color: #157067;">{title}</a></strong>{process_inline(rest)}</p>')
             else:
-                html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(line[2:])}</p>')
-        elif line.strip().startswith("["):
-            match = re.match(r"\s*\[(.+?)\]\((.+?)\)(.*)", line)
-            if match:
-                title, url, rest = match.groups()
-                html_parts.append(f'<p style="margin: 0 0 4px 0;"><strong><a href="{url}" style="color: #157067;">{title}</a></strong>{process_inline(rest)}</p>')
-            else:
-                html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(line.strip())}</p>')
-        elif line.strip():
-            html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(line.strip())}</p>')
+                html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(para[2:])}</p>')
+        else:
+            html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(para)}</p>')
 
     content = "\n".join(html_parts)
 
