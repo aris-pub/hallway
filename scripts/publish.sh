@@ -16,7 +16,11 @@ DAY=$(date +%u)   # 1=Monday, 7=Sunday
 HOUR=$(date +%H)
 
 run_now() {
-    sed -i '' '/^draft: true$/d' "$FILE"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' '/^draft: true$/d' "$FILE"
+    else
+        sed -i '/^draft: true$/d' "$FILE"
+    fi
     node scripts/gen-og-images.js
     npm run build
     git add -A
