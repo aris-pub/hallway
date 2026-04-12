@@ -32,7 +32,8 @@ Bad framing: "Exciting developments in AI-assisted literature review this week!"
 
 RULES:
 - Aim for 5-10 items total. Quality over quantity.
-- No more than 2 links from the same outlet per edition. Diversify sources.
+- No more than 2 links from the same publisher per edition (e.g. Nature, Nature Astronomy, and Nature Machine Intelligence all count as "Nature"). Diversify sources.
+- Ensure at least 2 items cover tools, infrastructure, or methodology changes (not just policy, integrity, or governance). The newsletter should show what researchers are building, not just what's going wrong.
 - Group under 2-4 section headings using ##.
 - Each item is a markdown list item with three parts separated by BLANK LINES:
   1. The linked title
