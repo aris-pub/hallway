@@ -13,6 +13,10 @@ agent:
 agent-dry:
     uv run --with httpx,resend python agent/curate.py --dry-run
 
+# Post to Bluesky (optionally at a specific time, e.g., just bsky 003 "text" 14:00)
+bsky NUMBER TEXT AT="":
+    uv run --with httpx python agent/post_bsky.py {{NUMBER}} "{{TEXT}}" {{ if AT != "" { "--at " + AT } else { "" } }}
+
 # Run tests
 test:
     uv run --with httpx,resend,pytest pytest agent/test_curate.py -v
