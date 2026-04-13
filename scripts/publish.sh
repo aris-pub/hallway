@@ -21,6 +21,7 @@ run_now() {
     else
         sed -i '/^draft: true$/d' "$FILE"
     fi
+    [ -d node_modules ] || npm install --silent
     node scripts/gen-og-images.js
     npm run build
     git add -A
