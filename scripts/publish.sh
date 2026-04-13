@@ -4,6 +4,7 @@ set -euo pipefail
 NUMBER="$1"
 PADDED=$(printf "%03d" "$NUMBER")
 FILE="src/no/${PADDED}.md"
+POST_FILE="src/no/${PADDED}.post.md"
 REMOTE="leo@syenite.local"
 REMOTE_DIR="/home/leo/aris/hallway"
 
@@ -28,6 +29,23 @@ run_now() {
     git commit -m "Publish No. ${PADDED}"
     git push
     uv run --with resend,httpx python agent/broadcast.py "$PADDED"
+
+    # Post to social media
+    if [ -f "$POST_FILE" ]; then
+        BSKY_TEXT=$(sed -n '1,/^---$/p' "$POST_FILE" | sed '/^---$/d')
+        LI_TEXT=$(sed -n '/^---$/,$ p' "$POST_FILE" | sed '1d')
+
+        if [ -n "$BSKY_TEXT" ] && [ -n "${BSKY_HANDLE:-}" ]; then
+            uv run --with httpx python agent/post_bsky.py "$PADDED" "$BSKY_TEXT"
+        fi
+
+        echo ""
+        echo "=== LinkedIn post (copy and paste manually): ==="
+        echo ""
+        echo "$LI_TEXT"
+        echo ""
+    fi
+
     echo "Published No. ${PADDED}"
 }
 
@@ -35,7 +53,7 @@ schedule_on_server() {
     echo "Scheduling No. ${PADDED} for Monday 9:00 AM on syenite..."
 
     # Push the reviewed edition first so server has it
-    git add "$FILE"
+    git add "$FILE" "$POST_FILE" 2>/dev/null
     git commit -m "Review No. ${PADDED}" || true
     git push
 

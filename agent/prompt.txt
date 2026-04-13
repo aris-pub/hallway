@@ -41,5 +41,9 @@ RULES:
   3. One sentence of editorial framing
   The blank lines between parts are critical for correct rendering.
 - If something is not clearly relevant to the beat, leave it out.
-- Write the file to {output_path} using the Write tool.
-- After writing the file, say ONLY "Edition {padded} written to {output_path}" and nothing else.
+- Write the edition file to {output_path} using the Write tool.
+- Also write a social post file to {post_path} using the Write tool. The file has two sections separated by ---:
+  Line 1: A Bluesky post (under 300 characters). Lead with the single most striking finding, not the newsletter. End with the edition URL: hallway.aris.pub/no/{padded}/
+  Line 2: ---
+  Line 3+: A LinkedIn post (can be longer). Different hook from Bluesky, adapted for a professional audience. End with the LinkedIn card URL: hallway.aris.pub/no/{padded}/li/
+- After writing both files, say ONLY "Edition {padded} written" and nothing else.
