@@ -46,9 +46,12 @@ post_social() {
         echo "Posted to Bluesky"
     fi
 
-    if [ -n "$LI_TEXT" ]; then
+    if [ -n "$LI_TEXT" ] && [ -f ".linkedin-token.json" ]; then
+        uv run --with httpx python agent/post_linkedin.py "$PADDED" "$LI_TEXT"
+        echo "Posted to LinkedIn"
+    elif [ -n "$LI_TEXT" ]; then
         echo ""
-        echo "=== LinkedIn post (copy and paste manually): ==="
+        echo "=== LinkedIn post (copy and paste, or run 'post_linkedin.py --auth' to automate): ==="
         echo ""
         echo "$LI_TEXT"
         echo ""

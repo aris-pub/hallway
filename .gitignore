@@ -1,6 +1,7 @@
 node_modules/
 _site/
 .env
+.linkedin-token.json
 agent/.venv/
 __pycache__/
 *.pyc
