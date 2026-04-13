@@ -16,7 +16,7 @@ fi
 DAY=$(date +%u)   # 1=Monday, 7=Sunday
 HOUR=$(date +%H)
 
-run_now() {
+deploy_and_broadcast() {
     if [[ "$(uname)" == "Darwin" ]]; then
         sed -i '' '/^draft: true$/d' "$FILE"
     else
@@ -29,43 +29,73 @@ run_now() {
     git commit -m "Publish No. ${PADDED}"
     git push
     uv run --with resend,httpx python agent/broadcast.py "$PADDED"
+    echo "Deployed and broadcast No. ${PADDED}"
+}
 
-    # Post to social media
-    if [ -f "$POST_FILE" ]; then
-        BSKY_TEXT=$(sed -n '1,/^---$/p' "$POST_FILE" | sed '/^---$/d')
-        LI_TEXT=$(sed -n '/^---$/,$ p' "$POST_FILE" | sed '1d')
+post_social() {
+    if [ ! -f "$POST_FILE" ]; then
+        echo "No post file found at $POST_FILE, skipping social."
+        return
+    fi
 
-        if [ -n "$BSKY_TEXT" ] && [ -n "${BSKY_HANDLE:-}" ]; then
-            uv run --with httpx python agent/post_bsky.py "$PADDED" "$BSKY_TEXT"
-        fi
+    BSKY_TEXT=$(sed -n '1,/^---$/p' "$POST_FILE" | sed '/^---$/d')
+    LI_TEXT=$(sed -n '/^---$/,$ p' "$POST_FILE" | sed '1d')
 
+    if [ -n "$BSKY_TEXT" ] && [ -n "${BSKY_HANDLE:-}" ]; then
+        uv run --with httpx python agent/post_bsky.py "$PADDED" "$BSKY_TEXT"
+        echo "Posted to Bluesky"
+    fi
+
+    if [ -n "$LI_TEXT" ]; then
         echo ""
         echo "=== LinkedIn post (copy and paste manually): ==="
         echo ""
         echo "$LI_TEXT"
         echo ""
     fi
+}
 
+run_all_now() {
+    deploy_and_broadcast
+    post_social
     echo "Published No. ${PADDED}"
 }
 
 schedule_on_server() {
-    echo "Scheduling No. ${PADDED} for Monday 9:00 AM on syenite..."
+    echo "Scheduling No. ${PADDED} on syenite..."
 
     # Push the reviewed edition first so server has it
-    git add "$FILE" "$POST_FILE" 2>/dev/null
+    git add "$FILE" "$POST_FILE" 2>/dev/null || true
     git commit -m "Review No. ${PADDED}" || true
     git push
 
-    # Create a self-deleting cron entry on syenite
-    CRON_CMD="0 9 * * 1 cd ${REMOTE_DIR} && git pull --quiet && PATH=/home/leo/.local/bin:\$PATH just publish ${PADDED} >> /home/leo/.hermes/cron/output/hallway-publish.log 2>&1 && (crontab -l | grep -v 'just publish ${PADDED}' | crontab -)"
-    ssh "$REMOTE" "(crontab -l; echo '${CRON_CMD}') | crontab -"
+    # Deploy + broadcast at Monday 9am (self-deleting)
+    DEPLOY_CMD="0 9 * * 1 cd ${REMOTE_DIR} && git pull --quiet && PATH=/home/leo/.local/bin:\$PATH ./scripts/publish.sh ${PADDED} --deploy-only >> /home/leo/.hermes/cron/output/hallway-publish.log 2>&1 && (crontab -l | grep -v 'publish.sh ${PADDED} --deploy-only' | crontab -)"
 
-    echo "Scheduled. No. ${PADDED} will publish Monday at 9:00 AM."
+    # Bluesky post at Monday 2pm (self-deleting)
+    BSKY_CMD="0 14 * * 1 cd ${REMOTE_DIR} && PATH=/home/leo/.local/bin:\$PATH ./scripts/publish.sh ${PADDED} --social-only >> /home/leo/.hermes/cron/output/hallway-publish.log 2>&1 && (crontab -l | grep -v 'publish.sh ${PADDED} --social-only' | crontab -)"
+
+    ssh "$REMOTE" "(crontab -l; echo '${DEPLOY_CMD}'; echo '${BSKY_CMD}') | crontab -"
+
+    echo "Scheduled:"
+    echo "  Monday 9:00 AM  - deploy + broadcast email"
+    echo "  Monday 2:00 PM  - Bluesky post"
+    echo "  LinkedIn post will be printed to terminal when you run 'just publish ${PADDED}' on Monday"
 }
 
+# Handle internal flags from scheduled cron
+if [[ "${2:-}" == "--deploy-only" ]]; then
+    deploy_and_broadcast
+    exit 0
+fi
+
+if [[ "${2:-}" == "--social-only" ]]; then
+    post_social
+    exit 0
+fi
+
+# Normal invocation: decide whether to run now or schedule
 if [ "$DAY" -eq 1 ]; then
-    # Monday
     if [ "$HOUR" -ge 9 ]; then
         if [ "$HOUR" -ge 10 ]; then
             echo "It's Monday $(date +%H:%M). Edition will publish immediately."
@@ -75,21 +105,18 @@ if [ "$DAY" -eq 1 ]; then
                 exit 0
             fi
         fi
-        run_now
+        run_all_now
     else
-        # Monday before 9am
         schedule_on_server
     fi
 elif [ "$DAY" -ge 2 ] && [ "$DAY" -le 5 ]; then
-    # Tuesday-Friday: you're late
     echo "It's $(date +%A) $(date +%H:%M). Edition will publish immediately."
     read -p "Continue? [y/N] " confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo "Aborted."
         exit 0
     fi
-    run_now
+    run_all_now
 else
-    # Saturday or Sunday
     schedule_on_server
 fi
