@@ -19,10 +19,12 @@ SEARCH WINDOW: {week_ago} to {today}
 THE BEAT:
 {beat}
 
-STEP 1 - CHECK THESE SOURCES for recent posts/articles from {week_ago} to {today}:
+STEP 1 - READ {inbox_path} for manually submitted links. These links MUST ALL be included in the edition. Do not skip any. After reading, write the file back with only the header (everything above the ---) to clear the consumed links.
+{inbox_block}
+STEP 2 - CHECK THESE SOURCES for recent posts/articles from {week_ago} to {today}:
 {source_list}
 
-STEP 2 - After checking the sources above, do ONE broad web search for "AI affecting scientific research practice {today}" to catch anything the listed sources missed. Only include results that clearly fit the beat.
+STEP 3 - After checking the sources above, do ONE broad web search for "AI affecting scientific research practice {today}" to catch anything the listed sources missed. Only include results that clearly fit the beat.
 {dedup_block}
 VOICE:
 Write as a researcher speaking to researchers. No excitement, no alarm. Name the specific thing that happened and why it matters. Avoid words like "exciting," "groundbreaking," "game-changing," "revolutionizing." If you can't explain why a researcher should care in one concrete sentence, leave it out.

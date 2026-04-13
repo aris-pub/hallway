@@ -25,6 +25,7 @@ SOURCES_FILE = REPO_ROOT / "sources.md"
 EDITIONS_DIR = REPO_ROOT / "src" / "no"
 TEMPLATE_FILE = AGENT_DIR / "edition-template.md"
 PROMPT_FILE = AGENT_DIR / "prompt.txt"
+INBOX_FILE = REPO_ROOT / "inbox.md"
 MIN_CONTENT_LENGTH = 100
 DEDUP_EDITIONS = 3
 
@@ -137,6 +138,18 @@ ALREADY COVERED (do not include these URLs or stories about the same topic):
 {url_list}
 """
 
+    # Read inbox for manually submitted links
+    inbox_block = ""
+    if INBOX_FILE.exists():
+        inbox_text = INBOX_FILE.read_text()
+        # Extract everything after the --- separator
+        parts = inbox_text.split("---", 1)
+        if len(parts) > 1 and parts[1].strip():
+            inbox_block = f"""
+MANUALLY SUBMITTED LINKS (you MUST include ALL of these):
+{parts[1].strip()}
+"""
+
     prompt_template = PROMPT_FILE.read_text()
     return prompt_template.format(
         padded=padded,
@@ -144,12 +157,14 @@ ALREADY COVERED (do not include these URLs or stories about the same topic):
         today=today,
         output_path=output_path,
         post_path=post_path,
+        inbox_path=INBOX_FILE,
         template=template,
         number=number,
         date=date,
         beat=BEAT,
         source_list=source_list,
         dedup_block=dedup_block,
+        inbox_block=inbox_block,
     )
 
 
