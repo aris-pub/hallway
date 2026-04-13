@@ -10,3 +10,4 @@ Format:
 
 ---
 
+- [https://arxiv.org/abs/2604.05714](https://arxiv.org/abs/2604.05714)
