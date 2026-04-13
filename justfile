@@ -17,6 +17,11 @@ agent-dry:
 bsky NUMBER TEXT AT="":
     uv run --with httpx python agent/post_bsky.py {{NUMBER}} "{{TEXT}}" {{ if AT != "" { "--at " + AT } else { "" } }}
 
+# Add a link to the inbox for the next edition
+inbox LINK:
+    echo '\n- {{LINK}}' >> inbox.md
+    git add inbox.md && git commit -m "Inbox: {{LINK}}" && git push
+
 # Run tests
 test:
     uv run --with httpx,resend,pytest pytest agent/test_curate.py -v
