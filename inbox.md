@@ -9,11 +9,3 @@ Format:
 ```
 
 ---
-
-- [https://arxiv.org/abs/2604.05714](https://arxiv.org/abs/2604.05714)
-
-- https://openai.com/index/introducing-gpt-rosalind/
-
-- https://www.quantamagazine.org/the-ai-revolution-in-math-has-arrived-20260413/
-
-- https://giants-insights.github.io/

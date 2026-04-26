@@ -19,8 +19,10 @@ SEARCH WINDOW: {week_ago} to {today}
 THE BEAT:
 {beat}
 
-STEP 1 - READ {inbox_path} for manually submitted links. These links MUST ALL be included in the edition. Do not skip any. After reading, write the file back with only the header (everything above the ---) to clear the consumed links.
+STEP 1 - READ {inbox_path} for manually submitted links. These links MUST ALL be included in the edition. Do not skip any.
 {inbox_block}
+STEP 1B - CLEAR THE INBOX. This step is MANDATORY and must happen before STEP 2. Use the Write tool to overwrite {inbox_path} with ONLY the header (everything from the top of the file through and including the `---` separator line, with a trailing newline). Do not include any of the consumed links. If you skip this step, those same links will be republished next week. Verify by reading the file back and confirming nothing appears below the `---`.
+
 STEP 2 - CHECK THESE SOURCES for recent posts/articles from {week_ago} to {today}:
 {source_list}
 
