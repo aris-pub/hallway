@@ -81,13 +81,28 @@ schedule_on_server() {
     git commit -m "Review No. ${PADDED}" || true
     git push
 
-    # Deploy + broadcast at Monday 9am (self-deleting)
-    DEPLOY_CMD="0 9 * * 1 cd ${REMOTE_DIR} && git pull --quiet && PATH=/home/leo/.local/bin:\$PATH ./scripts/publish.sh ${PADDED} --deploy-only >> /home/leo/.hermes/cron/output/hallway-publish.log 2>&1 && (crontab -l | grep -v 'publish.sh ${PADDED} --deploy-only' | crontab -)"
+    # Use unique markers (no shell-special chars) for self-delete so we never
+    # ship a cron line whose grep -v argument can be split into flags.
+    DEPLOY_TAG="hallway_publish_${PADDED}_deploy"
+    BSKY_TAG="hallway_publish_${PADDED}_bsky"
 
-    # Bluesky post at Monday 2pm (self-deleting)
-    BSKY_CMD="0 14 * * 1 cd ${REMOTE_DIR} && PATH=/home/leo/.local/bin:\$PATH ./scripts/publish.sh ${PADDED} --social-only >> /home/leo/.hermes/cron/output/hallway-publish.log 2>&1 && (crontab -l | grep -v 'publish.sh ${PADDED} --social-only' | crontab -)"
+    # Deploy + broadcast at Monday 9am (self-deleting via marker tag)
+    DEPLOY_CMD="0 9 * * 1 cd ${REMOTE_DIR} && git pull --quiet && PATH=/home/leo/.local/bin:\$PATH ./scripts/publish.sh ${PADDED} --deploy-only >> /home/leo/.hermes/cron/output/hallway-publish.log 2>&1 && crontab -l | grep -v ${DEPLOY_TAG} | crontab -"
 
-    ssh "$REMOTE" "(crontab -l; echo '${DEPLOY_CMD}'; echo '${BSKY_CMD}') | crontab -"
+    # Bluesky post at Monday 2pm (self-deleting via marker tag)
+    BSKY_CMD="0 14 * * 1 cd ${REMOTE_DIR} && PATH=/home/leo/.local/bin:\$PATH ./scripts/publish.sh ${PADDED} --social-only >> /home/leo/.hermes/cron/output/hallway-publish.log 2>&1 && crontab -l | grep -v ${BSKY_TAG} | crontab -"
+
+    # Append cron lines via a heredoc on the remote so embedded $PATH and
+    # other special chars don't get re-parsed by intermediate shells.
+    ssh "$REMOTE" bash <<REMOTE_EOF
+crontab -l 2>/dev/null > /tmp/hallway-crontab-stage
+cat >> /tmp/hallway-crontab-stage <<'CRON_LINES'
+${DEPLOY_CMD}
+${BSKY_CMD}
+CRON_LINES
+crontab /tmp/hallway-crontab-stage
+rm -f /tmp/hallway-crontab-stage
+REMOTE_EOF
 
     echo "Scheduled:"
     echo "  Monday 9:00 AM  - deploy + broadcast email"
