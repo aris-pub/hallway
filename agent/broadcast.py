@@ -9,6 +9,7 @@ Usage:
 import argparse
 import os
 import re
+import sys
 from pathlib import Path
 
 import httpx
@@ -150,11 +151,9 @@ def main():
     api_key = os.environ.get("RESEND_API_KEY")
     segment_id = os.environ.get("RESEND_SEGMENT_ID")
     if not api_key:
-        print("Error: RESEND_API_KEY not set")
-        return
+        sys.exit("Error: RESEND_API_KEY not set")
     if not segment_id:
-        print("Error: RESEND_SEGMENT_ID not set")
-        return
+        sys.exit("Error: RESEND_SEGMENT_ID not set")
 
     resend.api_key = api_key
 

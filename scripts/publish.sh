@@ -1,6 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
+# Load .env so cron-launched runs see RESEND_API_KEY etc.
+# (interactive runs already get these via justfile's dotenv-load).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "${SCRIPT_DIR}/../.env" ]; then
+    set -a
+    . "${SCRIPT_DIR}/../.env"
+    set +a
+fi
+
 NUMBER="$1"
 PADDED=$(printf "%03d" "$NUMBER")
 FILE="src/no/${PADDED}.md"
