@@ -179,6 +179,28 @@ def run_claude(prompt: str) -> tuple[int, str]:
     return result.returncode, result.stdout.strip()
 
 
+def preflight_claude() -> tuple[bool, str]:
+    """Verify the `claude` CLI is installed and authenticated before doing real work.
+
+    Returns (ok, message). On failure, message is suitable for inclusion in an alert.
+    """
+    try:
+        result = subprocess.run(
+            ["claude", "-p", "Reply with the single word: ok"],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except FileNotFoundError:
+        return False, "claude CLI not found on PATH"
+    except subprocess.TimeoutExpired:
+        return False, "claude preflight timed out after 60s"
+    if result.returncode != 0:
+        detail = (result.stdout + result.stderr).strip()[:500]
+        return False, f"claude preflight exited {result.returncode}: {detail}"
+    return True, result.stdout.strip()
+
+
 def write_edition(number: int, date: str, content: str) -> Path:
     """Write a draft edition markdown file (fallback if Claude doesn't write it)."""
     padded = str(number).zfill(3)
@@ -216,6 +238,26 @@ def send_notification(number: int, file_path: Path, admin_email: str) -> None:
     })
 
 
+def send_failure_notification(reason: str, number: int | None, admin_email: str) -> None:
+    """Email when the agent fails. Best-effort; swallows email errors."""
+    label = f"No. {str(number).zfill(3)}" if number else "(unknown edition)"
+    try:
+        resend.Emails.send({
+            "from": f"The Hallway Track <{FROM_EMAIL}>",
+            "to": [admin_email],
+            "reply_to": REPLY_TO,
+            "subject": f"Agent failed: {label}",
+            "text": (
+                f"The Hallway Track curation agent failed.\n\n"
+                f"Edition: {label}\n\n"
+                f"Reason:\n{reason}\n\n"
+                f"Full log on syenite: ~/.hermes/cron/output/hallway-agent.log"
+            ),
+        })
+    except Exception as e:
+        print(f"Warning: failed to send failure email: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Hallway Track curation agent")
     parser.add_argument("--dry-run", action="store_true",
@@ -243,6 +285,25 @@ def main():
             print(f"Would exclude {len(previous_urls)} URLs from recent editions")
         return
 
+    api_key = os.environ.get("RESEND_API_KEY")
+    admin_email = os.environ.get("ADMIN_EMAIL", "hello@aris.pub")
+    if api_key:
+        resend.api_key = api_key
+
+    def fail(reason: str) -> None:
+        print(reason)
+        if api_key:
+            send_failure_notification(reason, number, admin_email)
+        else:
+            print("Warning: RESEND_API_KEY not set, skipping failure email")
+
+    print("Preflight: checking claude CLI auth...")
+    ok, msg = preflight_claude()
+    if not ok:
+        fail(f"Preflight failed before edition No. {padded}: {msg}")
+        return
+    print(f"Preflight OK: {msg}")
+
     if previous_urls:
         print(f"Dedup: excluding {len(previous_urls)} URLs from recent editions")
 
@@ -252,22 +313,22 @@ def main():
     try:
         exit_code, output = run_claude(prompt)
     except subprocess.TimeoutExpired:
-        print("Error: Claude Code timed out after 10 minutes.")
+        fail("Claude Code timed out after 10 minutes.")
         return
 
     print(f"Claude: {output}")
 
     if exit_code != 0:
-        print(f"Error: Claude Code exited with code {exit_code}")
+        fail(f"Claude Code exited with code {exit_code}\nOutput: {output[:1000]}")
         return
 
     if not output_path.exists():
-        print(f"Error: Expected file {output_path} was not created.")
+        fail(f"Expected file {output_path} was not created.")
         return
 
     content = output_path.read_text()
     if len(content.strip()) < MIN_CONTENT_LENGTH:
-        print(f"Error: Edition file is too short ({len(content.strip())} chars). Review manually.")
+        fail(f"Edition file is too short ({len(content.strip())} chars). Review manually.")
         return
 
     broken = verify_links(content)
@@ -287,15 +348,20 @@ def main():
     subprocess.run(["git", "push"], cwd=REPO_ROOT)
     print("Draft committed and pushed")
 
-    api_key = os.environ.get("RESEND_API_KEY")
-    admin_email = os.environ.get("ADMIN_EMAIL", "hello@aris.pub")
     if not api_key:
         print("Warning: RESEND_API_KEY not set, skipping email notification")
         return
-    resend.api_key = api_key
     send_notification(number, output_path, admin_email)
     print(f"Notification sent to {admin_email}")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        api_key = os.environ.get("RESEND_API_KEY")
+        admin_email = os.environ.get("ADMIN_EMAIL", "hello@aris.pub")
+        if api_key:
+            resend.api_key = api_key
+            send_failure_notification(f"Unhandled exception: {e!r}", None, admin_email)
+        raise

@@ -1,8 +1,9 @@
 """Tests for the curation agent's deterministic functions."""
 
+import subprocess
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -12,6 +13,8 @@ from curate import (
     next_edition_number,
     next_publish_date,
     parse_sources,
+    preflight_claude,
+    send_failure_notification,
     verify_links,
     write_edition,
     MIN_CONTENT_LENGTH,
@@ -228,3 +231,63 @@ class TestWriteEdition:
         path = write_edition(1, "2026-04-06", "Content")
         text = path.read_text()
         assert "\u2014" not in text
+
+
+class TestPreflightClaude:
+    @patch("curate.subprocess.run")
+    def test_returns_ok_when_claude_succeeds(self, mock_run):
+        mock_run.return_value = MagicMock(returncode=0, stdout="ok\n", stderr="")
+        ok, msg = preflight_claude()
+        assert ok is True
+        assert msg == "ok"
+
+    @patch("curate.subprocess.run")
+    def test_returns_failure_on_nonzero_exit(self, mock_run):
+        mock_run.return_value = MagicMock(
+            returncode=1,
+            stdout="Failed to authenticate. API Error: 401",
+            stderr="",
+        )
+        ok, msg = preflight_claude()
+        assert ok is False
+        assert "exited 1" in msg
+        assert "401" in msg
+
+    @patch("curate.subprocess.run")
+    def test_returns_failure_when_claude_missing(self, mock_run):
+        mock_run.side_effect = FileNotFoundError()
+        ok, msg = preflight_claude()
+        assert ok is False
+        assert "not found" in msg.lower()
+
+    @patch("curate.subprocess.run")
+    def test_returns_failure_on_timeout(self, mock_run):
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd="claude", timeout=60)
+        ok, msg = preflight_claude()
+        assert ok is False
+        assert "timed out" in msg.lower()
+
+
+class TestSendFailureNotification:
+    @patch("curate.resend.Emails.send")
+    def test_includes_edition_label(self, mock_send):
+        send_failure_notification("boom", 7, "test@example.com")
+        payload = mock_send.call_args[0][0]
+        assert "No. 007" in payload["subject"]
+        assert "No. 007" in payload["text"]
+        assert "boom" in payload["text"]
+        assert payload["to"] == ["test@example.com"]
+
+    @patch("curate.resend.Emails.send")
+    def test_handles_unknown_edition(self, mock_send):
+        send_failure_notification("preflight failed", None, "test@example.com")
+        payload = mock_send.call_args[0][0]
+        assert "unknown" in payload["subject"].lower() or "unknown" in payload["text"].lower()
+
+    @patch("curate.resend.Emails.send")
+    def test_swallows_email_errors(self, mock_send, capsys):
+        mock_send.side_effect = RuntimeError("resend down")
+        # Must not raise
+        send_failure_notification("boom", 7, "test@example.com")
+        captured = capsys.readouterr()
+        assert "resend down" in captured.out
