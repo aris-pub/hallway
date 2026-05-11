@@ -3,6 +3,8 @@ You are writing edition No. {padded} of The Hallway Track, a weekly curated link
 YOUR JOB:
 1. Search the web for notable developments from {week_ago} to {today} that fit the beat.
 2. Write the edition file to: {output_path}
+3. Write a social post file to: {post_path}
+4. Write an @aris-pub quote-repost framing to: {aris_path}
 
 The file must follow this template exactly:
 ```
@@ -34,6 +36,9 @@ Write as a researcher speaking to researchers. No excitement, no alarm. Name the
 Good framing: "FutureHouse's literature agent outperformed PhD researchers on retrieval tasks. The benchmark is narrow, but the direction is clear."
 Bad framing: "Exciting developments in AI-assisted literature review this week!"
 
+SYNTHESIS PARAGRAPH (optional, top of edition):
+After the frontmatter and before the first ## section, optionally write a 3-5 sentence editorial synthesis in Leo's first-person voice — his read of what these links mean together this week. Examples of when to include it: a clear across-edition theme (e.g., "three editions have flagged citation integrity"), a non-obvious connection between two items, a contrarian observation. If you don't have a real take, OMIT the paragraph entirely. Do not write filler. No heading; the paragraph just sits between the frontmatter and the first section.
+
 RULES:
 - Aim for 5-10 items total. Quality over quantity.
 - No more than 2 links from the same publisher per edition (e.g. Nature, Nature Astronomy, and Nature Machine Intelligence all count as "Nature"). Diversify sources.
@@ -50,4 +55,12 @@ RULES:
   Line 1: A Bluesky post (under 300 characters). Lead with the single most striking finding, not the newsletter. End with the edition URL: hallway.aris.pub/no/{padded}/
   Line 2: ---
   Line 3+: A LinkedIn post (can be longer). Different hook from Bluesky, adapted for a professional audience. End with the LinkedIn card URL: hallway.aris.pub/no/{padded}/li/
-- After writing both files, say ONLY "Edition {padded} written" and nothing else.
+- Also write {aris_path} using the Write tool. ONE sentence in @aris-pub's institutional voice, for use when @aris-pub manually quote-reposts Leo's Monday Bluesky post. Rules for this sentence:
+  - Institutional voice, not first-person. No "I", no personal opinion. Curator's note from the org, not Leo's read.
+  - Connect the week's content to Aris's broader frame (open infrastructure for AI-era research, named accountability, reader-side trust signals, the producer-side / reader-side split). Not all of those every time — pick the one that fits.
+  - Researcher-to-researcher register. No marketing language. No "exciting", no "must-read", no "thread".
+  - Do NOT promote Hallway, Aris, or any product. Do NOT include a call-to-action.
+  - One sentence. No URL (the quote-repost itself supplies the link). No hashtags.
+  Example shape: "Three editions in a row have flagged citation integrity — this is the structural reason reader-side trust infrastructure isn't optional."
+  Bad: "Don't miss this week's Hallway Track — Leo digs into citation integrity and more."
+- After writing all three files, say ONLY "Edition {padded} written" and nothing else.

@@ -117,7 +117,8 @@ def verify_links(content: str) -> list[str]:
 
 
 def build_prompt(sources: list[dict[str, str]], number: int, date: str,
-                 output_path: Path, post_path: Path, previous_urls: list[str] | None = None) -> str:
+                 output_path: Path, post_path: Path, aris_path: Path,
+                 previous_urls: list[str] | None = None) -> str:
     """Build the prompt that tells Claude Code to write the edition file."""
     today = datetime.now().strftime("%Y-%m-%d")
     week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
@@ -157,6 +158,7 @@ MANUALLY SUBMITTED LINKS (you MUST include ALL of these):
         today=today,
         output_path=output_path,
         post_path=post_path,
+        aris_path=aris_path,
         inbox_path=INBOX_FILE,
         template=template,
         number=number,
@@ -274,12 +276,14 @@ def main():
     padded = str(number).zfill(3)
     output_path = EDITIONS_DIR / f"{padded}.md"
     post_path = EDITIONS_DIR / f"{padded}.post.md"
+    aris_path = EDITIONS_DIR / f"{padded}.aris.md"
     previous_urls = get_previous_urls()
 
     if args.dry_run:
         print(f"Would scan {len(sources)} sources")
         print(f"Would write edition No. {padded} to {output_path}")
         print(f"Would write social posts to {post_path}")
+        print(f"Would write @aris-pub quote-repost framing to {aris_path}")
         print(f"Publish date: {date}")
         if previous_urls:
             print(f"Would exclude {len(previous_urls)} URLs from recent editions")
@@ -308,7 +312,7 @@ def main():
         print(f"Dedup: excluding {len(previous_urls)} URLs from recent editions")
 
     print(f"Scanning sources for edition No. {padded}...")
-    prompt = build_prompt(sources, number, date, output_path, post_path, previous_urls)
+    prompt = build_prompt(sources, number, date, output_path, post_path, aris_path, previous_urls)
 
     try:
         exit_code, output = run_claude(prompt)
@@ -340,7 +344,10 @@ def main():
     print(f"Draft written to {output_path}")
 
     # Commit and push draft so it can be reviewed from any machine
-    subprocess.run(["git", "add", str(output_path), str(post_path)], cwd=REPO_ROOT)
+    paths_to_add = [str(output_path), str(post_path)]
+    if aris_path.exists():
+        paths_to_add.append(str(aris_path))
+    subprocess.run(["git", "add", *paths_to_add], cwd=REPO_ROOT)
     subprocess.run(
         ["git", "commit", "-m", f"Draft: No. {padded}"],
         cwd=REPO_ROOT,
