@@ -50,7 +50,12 @@ post_social() {
     BSKY_TEXT=$(sed -n '1,/^---$/p' "$POST_FILE" | sed '/^---$/d')
     LI_TEXT=$(sed -n '/^---$/,$ p' "$POST_FILE" | sed '1d')
 
-    if [ -n "$BSKY_TEXT" ] && [ -n "${BSKY_HANDLE:-}" ]; then
+    if [ -n "$BSKY_TEXT" ]; then
+        if [ -z "${BSKY_HANDLE:-}" ] || [ -z "${BSKY_PASSWORD:-}" ]; then
+            echo "ERROR: Bluesky text present in $POST_FILE but BSKY_HANDLE or BSKY_PASSWORD missing." >&2
+            echo "Set both in .env (handle: your.bsky.social, password: app-password from bsky.app/settings/app-passwords)." >&2
+            exit 1
+        fi
         uv run --with httpx python agent/post_bsky.py "$PADDED" "$BSKY_TEXT"
         echo "Posted to Bluesky"
     fi
