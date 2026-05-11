@@ -9,3 +9,5 @@ Format:
 ```
 
 ---
+
+- https://arxiv.org/abs/2605.06651
