@@ -11,7 +11,8 @@ if [ -f "${SCRIPT_DIR}/../.env" ]; then
 fi
 
 NUMBER="$1"
-PADDED=$(printf "%03d" "$NUMBER")
+# Force base-10 so leading-zero inputs like "008" or "009" aren't parsed as octal.
+PADDED=$(printf "%03d" "$((10#$NUMBER))")
 FILE="src/no/${PADDED}.md"
 POST_FILE="src/no/${PADDED}.post.md"
 REMOTE="leo@syenite.local"
