@@ -100,6 +100,20 @@ def extract_bsky_text(post_content: str) -> str:
     return "\n".join(bsky_lines).strip()
 
 
+def build_bsky_retry_prompt(post_path: Path, current_length: int) -> str:
+    """Tell the agent the BSky text was too long and to rewrite only that section."""
+    return (
+        f"The Bluesky post in {post_path} is currently {current_length} characters, "
+        f"which exceeds Bluesky's 300-character limit.\n\n"
+        f"Read {post_path}, then rewrite ONLY the first section (everything before the first "
+        f"'---' line) to be under 280 characters. Keep the strongest finding as the lead and "
+        f"keep the edition URL at the end. Do not change the LinkedIn section (after the '---'). "
+        f"Do not change any other files.\n\n"
+        f"Use the Write tool to overwrite {post_path} with the corrected content. "
+        f"After writing, say ONLY 'BSky retry complete' and nothing else."
+    )
+
+
 def get_previous_urls(n: int = DEDUP_EDITIONS) -> list[str]:
     """Collect URLs from the most recent n editions for deduplication."""
     files = sorted(EDITIONS_DIR.glob("*.md"), reverse=True)
@@ -360,11 +374,29 @@ def main():
     if post_path.exists():
         bsky_text = extract_bsky_text(post_path.read_text())
         if len(bsky_text) > BSKY_MAX_CHARS:
-            fail(
-                f"Bluesky text exceeds {BSKY_MAX_CHARS} chars (got {len(bsky_text)}) in {post_path}. "
-                f"Shorten the first section before publishing — Monday's BSky cron will 400 otherwise."
+            print(
+                f"Bluesky text is {len(bsky_text)} chars > {BSKY_MAX_CHARS}. "
+                f"Asking agent to rewrite (one retry; no email unless retry also fails)."
             )
-            return
+            try:
+                retry_code, retry_output = run_claude(
+                    build_bsky_retry_prompt(post_path, len(bsky_text))
+                )
+            except subprocess.TimeoutExpired:
+                fail("Bluesky retry timed out after 10 minutes.")
+                return
+            print(f"Retry: {retry_output}")
+            if retry_code != 0:
+                fail(f"Bluesky retry exited {retry_code}\nOutput: {retry_output[:1000]}")
+                return
+            bsky_text = extract_bsky_text(post_path.read_text())
+            if len(bsky_text) > BSKY_MAX_CHARS:
+                fail(
+                    f"Bluesky text still over {BSKY_MAX_CHARS} chars after retry "
+                    f"(got {len(bsky_text)}). Manual fix needed before Monday."
+                )
+                return
+            print(f"Retry succeeded: Bluesky text now {len(bsky_text)} chars.")
 
     print(f"Draft written to {output_path}")
 

@@ -9,6 +9,7 @@ import pytest
 
 from curate import (
     BSKY_MAX_CHARS,
+    build_bsky_retry_prompt,
     extract_bsky_text,
     extract_urls,
     get_previous_urls,
@@ -315,6 +316,17 @@ class TestExtractBskyText:
         )
         bsky = extract_bsky_text(content)
         assert len(bsky) > BSKY_MAX_CHARS
+
+
+class TestBuildBskyRetryPrompt:
+    def test_includes_path_and_length(self):
+        prompt = build_bsky_retry_prompt(Path("/tmp/008.post.md"), 308)
+        assert "/tmp/008.post.md" in prompt
+        assert "308" in prompt
+        assert "300" in prompt
+        assert "280" in prompt  # target after retry has margin
+        assert "first section" in prompt.lower() or "first '---'" in prompt
+        assert "linkedin" in prompt.lower()  # explicit don't-touch instruction
 
 
 class TestSendFailureNotification:
