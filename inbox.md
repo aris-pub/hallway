@@ -10,8 +10,6 @@ Format:
 
 ---
 
-- https://arxiv.org/abs/2605.06651
-
 - [APC Caps and Bans: Why Funder Policies Aimed at Curbing the Publishing Industry Don't Work](https://scholarlykitchen.sspnet.org/2026/05/14/apc-caps-and-bans-why-funder-policies-aimed-at-curbing-the-publishing-industry-dont-work/)
   David Crotty (Scholarly Kitchen, 2026-05-14). Documents that funder APC caps and bans get routed around — career incentives override funder loyalty, transformative agreements move costs to library accounts, even Gates's own VeriXiv only captures 35-39% of its funded portfolio. Crotty has no positive program. The publishing-policy conversation has run out of upstream ideas; AI-era authorship is the next conversation the piece can't quite see. **Pairs with Dahl (next entry) and Ghildiyal 2026-03-03 as a thematic-edition triple** on "AI-era authorship and infrastructure stress." Not this week — needs a thematic edition, not a roundup slot.
 
