@@ -8,6 +8,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from curate import (
+    BSKY_MAX_CHARS,
+    extract_bsky_text,
     extract_urls,
     get_previous_urls,
     next_edition_number,
@@ -266,6 +268,53 @@ class TestPreflightClaude:
         ok, msg = preflight_claude()
         assert ok is False
         assert "timed out" in msg.lower()
+
+
+class TestExtractBskyText:
+    def test_returns_text_before_first_separator(self):
+        content = "BSky post here.\n---\nLinkedIn post here.\n"
+        assert extract_bsky_text(content) == "BSky post here."
+
+    def test_handles_multiline_bsky_section(self):
+        content = "Line 1.\nLine 2.\nLine 3.\n---\nLinkedIn.\n"
+        assert extract_bsky_text(content) == "Line 1.\nLine 2.\nLine 3."
+
+    def test_strips_surrounding_whitespace(self):
+        content = "\n\n  BSky.  \n\n---\nLI.\n"
+        assert extract_bsky_text(content) == "BSky."
+
+    def test_no_separator_returns_full_text(self):
+        content = "Just one section, no separator."
+        assert extract_bsky_text(content) == "Just one section, no separator."
+
+    def test_three_section_post_returns_only_bsky(self):
+        """Mirrors a future post.md format with @aris-pub section appended."""
+        content = "BSky text.\n---\nLinkedIn text.\n---\n@aris-pub framing.\n"
+        assert extract_bsky_text(content) == "BSky text."
+
+    def test_real_edition_007_post_under_limit(self):
+        """Edition 007's BSky text was within the limit. Regression guard."""
+        content = (
+            "1 in 277 biomedical papers now contains fabricated citations, up 12x since 2023. "
+            "A Lancet audit of 97 million references traced the sharpest rise to the adoption "
+            "of AI writing tools. This week's edition covers what that means alongside "
+            "zero-click readership and vibe physics. hallway.aris.pub/no/007/\n"
+            "---\nLI text\n"
+        )
+        bsky = extract_bsky_text(content)
+        assert len(bsky) <= BSKY_MAX_CHARS
+
+    def test_edition_008_actual_text_exceeds_limit(self):
+        """Edition 008's BSky text was 308 chars and caused a 400 from the BSky API."""
+        content = (
+            "Google's AI co-mathematician helped an Oxford researcher close a 60-year-old "
+            "open problem from the Kourovka Notebook. The system's trick: maintaining state "
+            "across a full research session, not just answering one-shot questions. Plus: "
+            "$172M in new open infrastructure for academic AI.\n\nhallway.aris.pub/no/008/\n"
+            "---\nLI text\n"
+        )
+        bsky = extract_bsky_text(content)
+        assert len(bsky) > BSKY_MAX_CHARS
 
 
 class TestSendFailureNotification:

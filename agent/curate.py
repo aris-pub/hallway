@@ -28,6 +28,7 @@ PROMPT_FILE = AGENT_DIR / "prompt.txt"
 INBOX_FILE = REPO_ROOT / "inbox.md"
 MIN_CONTENT_LENGTH = 100
 DEDUP_EDITIONS = 3
+BSKY_MAX_CHARS = 300
 
 BEAT = """\
 How AI is affecting the practice of science. Specifically: AI agents for \
@@ -82,6 +83,21 @@ def next_publish_date() -> str:
 def extract_urls(text: str) -> list[str]:
     """Extract markdown link URLs from text."""
     return re.findall(r"\[.+?\]\((https?://[^\)]+)\)", text)
+
+
+def extract_bsky_text(post_content: str) -> str:
+    """Return the Bluesky section of a post.md file (everything before the first '---' line).
+
+    Mirrors the parsing in scripts/publish.sh so a draft-time length check matches
+    what would actually be sent to Bluesky at post time.
+    """
+    lines = post_content.split("\n")
+    bsky_lines = []
+    for line in lines:
+        if line.strip() == "---":
+            break
+        bsky_lines.append(line)
+    return "\n".join(bsky_lines).strip()
 
 
 def get_previous_urls(n: int = DEDUP_EDITIONS) -> list[str]:
@@ -340,6 +356,15 @@ def main():
         print(f"Warning: {len(broken)} broken link(s) found:")
         for b in broken:
             print(b)
+
+    if post_path.exists():
+        bsky_text = extract_bsky_text(post_path.read_text())
+        if len(bsky_text) > BSKY_MAX_CHARS:
+            fail(
+                f"Bluesky text exceeds {BSKY_MAX_CHARS} chars (got {len(bsky_text)}) in {post_path}. "
+                f"Shorten the first section before publishing — Monday's BSky cron will 400 otherwise."
+            )
+            return
 
     print(f"Draft written to {output_path}")
 
