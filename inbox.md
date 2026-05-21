@@ -17,3 +17,5 @@ Format:
   Josh Dahl, SVP at ScholarOne/Silverchair (Scholarly Kitchen, 2026-05-13). Insider data: Q1 2026 manuscript submissions up 33% YoY, smallest journals +81% (vs 20% for largest), desk-rejection ratio climbed 1.69→2.49 since 2022, reviewer pool down ~1/3 since 2018. Driver = AI-assisted authorship in a "different moral register" than paper mills. Dahl explicitly rejects tech-detection solutions; frames the problem as structural. **Strongest 2026 market-validation signal for the Forum thesis** — the squeezed small-journal segment IS Forum's eventual target. **Triple with Crotty (above) and Ghildiyal 2026-03-03** for the thematic edition. Same caveat — not a roundup slot.
 
 - https://www.linkedin.com/feed/update/urn:li:activity:7461872153781641216/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAA5p8QwBD2zWxm5rTHzYT_OBxah2uABmzbc
+
+- https://openai.com/index/model-disproves-discrete-geometry-conjecture/
