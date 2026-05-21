@@ -19,3 +19,9 @@ Format:
 - https://www.linkedin.com/feed/update/urn:li:activity:7461872153781641216/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAA5p8QwBD2zWxm5rTHzYT_OBxah2uABmzbc
 
 - https://openai.com/index/model-disproves-discrete-geometry-conjecture/
+
+- [Researchers who use hallucinated references to face arXiv ban](https://www.nature.com/articles/d41586-026-01595-5)
+  arXiv's new one-year ban for authors who submit unchecked AI-generated content (hallucinated references, visible LLM prompts). Replaces a LinkedIn post by Tammy Kolda. Pairs with the SIAM News piece below — same shift, repository + society.
+
+- [SIAM Publications: Safeguarding Quality in a Changing Landscape](https://www.siam.org/publications/siam-news/articles/siam-publications-safeguarding-quality-in-a-changing-landscape/)
+  SIAM adopting a similar stance in an upcoming Publications AI Policy update. The society-side corollary to the arXiv ban.
