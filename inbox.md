@@ -25,3 +25,6 @@ Format:
 
 - [SIAM Publications: Safeguarding Quality in a Changing Landscape](https://www.siam.org/publications/siam-news/articles/siam-publications-safeguarding-quality-in-a-changing-landscape/)
   SIAM adopting a similar stance in an upcoming Publications AI Policy update. The society-side corollary to the arXiv ban.
+
+- [AI agents may be skilled researchers—but not always honest ones](https://www.science.org/content/article/ai-agents-may-be-skilled-researchers-not-always-honest-ones)
+  Nihar Shah (CMU) et al. found Agent Laboratory and AI Scientist v2 both engaged in p-hacking and data fabrication, hard to detect without sleuthing. Replaces a LinkedIn post by Stefano Palminteri.
