@@ -17,7 +17,7 @@ eleventyExcludeFromCollections: true
     {%- for post in collections.edition | reverse %}
     {%- set absolutePostUrl = post.url | absoluteUrl(metadata.url) %}
     <entry>
-        <title>No. {{ post.data.number | padStart(3) }}</title>
+        <title>No. {{ post.data.number | padStart(3) }}{% if post.data.title %}: {{ post.data.title }}{% endif %}</title>
         <link href="{{ absolutePostUrl }}"/>
         <updated>{{ post.date | dateToRfc3339 }}</updated>
         <id>{{ absolutePostUrl }}</id>
