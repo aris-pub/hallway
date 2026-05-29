@@ -18,3 +18,6 @@ Format:
 
 - [Retraction Note: Impacts of soret and dufour possessions on micropolar fluid past a stretching sheet in a porous medium](https://www.nature.com/articles/s41598-026-48538-8)
   Same journal (Scientific Reports), same window, retracted for same reasons (non-scientific/nonsensical terminology, inaccurate equations and references, authors unable to respond satisfactorily to concerns). The pair makes it a pattern story about AI-era paper-mill style errors clearing peer review, not a one-off.
+
+- [AutoScientists: Decentralized AI agents for autonomous research](https://arxiv.org/abs/2605.28655)
+  Harvard preprint: multi-agent system where AI scientists interpret shared experiments, self-organize around promising directions, evaluate proposals before allocating compute, and document failures alongside successes. Argues the AI-scientist bottleneck is governance, not raw capability. Results: 74.4% leaderboard percentile in biomedical ML, 1.9× faster LM training convergence, +12.5% on specific protein-fitness assays. Replaces a LinkedIn post by DAIR.AI.
