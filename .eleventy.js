@@ -32,7 +32,10 @@ module.exports = function(eleventyConfig) {
   });
 
   eleventyConfig.addCollection("edition", function(collectionApi) {
-    return collectionApi.getFilteredByTag("edition").filter(item => !item.data.draft);
+    const now = new Date();
+    return collectionApi.getFilteredByTag("edition")
+      .filter(item => !item.data.draft)
+      .filter(item => new Date(item.data.date) <= now);
   });
 
   eleventyConfig.addFilter("absoluteUrl", (url, base) => {
