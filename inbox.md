@@ -21,3 +21,6 @@ Format:
 
 - [AutoScientists: Decentralized AI agents for autonomous research](https://arxiv.org/abs/2605.28655)
   Harvard preprint: multi-agent system where AI scientists interpret shared experiments, self-organize around promising directions, evaluate proposals before allocating compute, and document failures alongside successes. Argues the AI-scientist bottleneck is governance, not raw capability. Results: 74.4% leaderboard percentile in biomedical ML, 1.9× faster LM training convergence, +12.5% on specific protein-fitness assays. Replaces a LinkedIn post by DAIR.AI.
+
+- [Nature is expanding Registered Reports to all the fields in which we publish](https://www.nature.com/articles/d41586-026-01629-y)
+  Nature editorial: Registered Reports — where the research plan is peer-reviewed before the study runs and the journal commits to publish regardless of results — now extends to all disciplines and to study types beyond confirmatory hypothesis testing (large-scale data collection, methodological comparisons). Direct counter-pressure to AI-era publication-bias and credibility concerns covered in recent editions. Replaces a LinkedIn post by Mary Elizabeth Sutherland.
