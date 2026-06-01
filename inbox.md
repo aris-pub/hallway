@@ -24,3 +24,9 @@ Format:
 
 - [Nature is expanding Registered Reports to all the fields in which we publish](https://www.nature.com/articles/d41586-026-01629-y)
   Nature editorial: Registered Reports — where the research plan is peer-reviewed before the study runs and the journal commits to publish regardless of results — now extends to all disciplines and to study types beyond confirmatory hypothesis testing (large-scale data collection, methodological comparisons). Direct counter-pressure to AI-era publication-bias and credibility concerns covered in recent editions. Replaces a LinkedIn post by Mary Elizabeth Sutherland.
+
+- [False authorship: an explorative case study around an AI-generated article published under my name](https://link.springer.com/article/10.1186/s41073-025-00165-z)
+  Spinellis (Research Integrity and Peer Review, 2025): a fake paper appeared under his name in a questionable journal — he never wrote it. Heuristic analysis of the same journal: 48 of 53 low-citation articles appeared AI-generated. Some named "authors" had already died before the paper was published. Pair with Retraction Watch (below) — same phenomenon, real-world case study.
+
+- [Journal goes dark after impersonating Eric Topol and others](https://retractionwatch.com/2026/04/23/eric-topol-ellinger-publishing-media-journal-digital-health-impersonation/)
+  Retraction Watch: a fabricated AI-generated paper appeared under Eric Topol's name in a fake journal; five of six listed authors confirmed never seeing it. Within hours of public discovery, the journal/publisher website went dark. Pair with Spinellis (above) — academic study + active news case. Replaces a LinkedIn post by Sai Kiran Chandha covering both.
