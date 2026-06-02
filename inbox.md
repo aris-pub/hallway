@@ -30,3 +30,6 @@ Format:
 
 - [Journal goes dark after impersonating Eric Topol and others](https://retractionwatch.com/2026/04/23/eric-topol-ellinger-publishing-media-journal-digital-health-impersonation/)
   Retraction Watch: a fabricated AI-generated paper appeared under Eric Topol's name in a fake journal; five of six listed authors confirmed never seeing it. Within hours of public discovery, the journal/publisher website went dark. Pair with Spinellis (above) — academic study + active news case. Replaces a LinkedIn post by Sai Kiran Chandha covering both.
+
+- [The sum-product conjecture is false for real numbers](https://arxiv.org/abs/2605.28781)
+  Bloom, Sawin, Schildkraut, Zhelezov (arXiv, May 2026): disproves the sum-product conjecture using a technique adapted from OpenAI's earlier Erdős unit-distance disproof (edition 008). Second major pure-math conjecture broken this spring using AI-derived techniques — propagation pattern, not isolated incident. Replaces a LinkedIn post by Lynn Gabbay.
