@@ -12,7 +12,9 @@ from curate import (
     build_bsky_retry_prompt,
     build_dedup_retry_prompt,
     extract_bsky_text,
+    extract_links,
     extract_urls,
+    get_previous_entries,
     get_previous_urls,
     next_edition_number,
     next_publish_date,
@@ -133,6 +135,44 @@ class TestNextPublishDate:
         mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
         result = next_publish_date()
         assert result == "2026-03-30"  # next day is Monday
+
+
+class TestExtractLinks:
+    def test_returns_title_url_pairs(self):
+        text = "- [AutoScientists](https://arxiv.org/abs/2605.28655)"
+        assert extract_links(text) == [("AutoScientists", "https://arxiv.org/abs/2605.28655")]
+
+    def test_handles_multiple_links(self):
+        text = "- [A](https://a.com)\n- [B](https://b.com/path)"
+        assert extract_links(text) == [("A", "https://a.com"), ("B", "https://b.com/path")]
+
+    def test_handles_titles_with_parentheses(self):
+        text = "- [Title (subtitle)](https://x.com)"
+        assert extract_links(text) == [("Title (subtitle)", "https://x.com")]
+
+    def test_no_links(self):
+        assert extract_links("Just prose, no links.") == []
+
+
+class TestGetPreviousEntries:
+    def test_returns_entries_with_url_title_edition(self, editions_dir):
+        (editions_dir / "008.md").write_text(
+            "---\n---\n- [AutoScientists](https://arxiv.org/abs/2605.28655)\n"
+        )
+        entries = get_previous_entries(n=1)
+        assert entries == [{
+            "url": "https://arxiv.org/abs/2605.28655",
+            "title": "AutoScientists",
+            "edition": 8,
+        }]
+
+    def test_includes_edition_numbers_for_each_entry(self, editions_dir):
+        (editions_dir / "008.md").write_text("---\n---\n- [A](https://a.com)\n")
+        (editions_dir / "009.md").write_text("---\n---\n- [B](https://b.com)\n")
+        (editions_dir / "010.md").write_text("---\n---\n- [C](https://c.com)\n")
+        entries = get_previous_entries(n=3)
+        editions = sorted({e["edition"] for e in entries})
+        assert editions == [8, 9, 10]
 
 
 class TestExtractUrls:

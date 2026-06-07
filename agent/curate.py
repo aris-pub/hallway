@@ -80,9 +80,14 @@ def next_publish_date() -> str:
     return (today + timedelta(days=days_ahead)).strftime("%Y-%m-%d")
 
 
+def extract_links(text: str) -> list[tuple[str, str]]:
+    """Extract markdown links from text as (title, url) tuples."""
+    return re.findall(r"\[(.+?)\]\((https?://[^\)]+)\)", text)
+
+
 def extract_urls(text: str) -> list[str]:
     """Extract markdown link URLs from text."""
-    return re.findall(r"\[.+?\]\((https?://[^\)]+)\)", text)
+    return [url for _, url in extract_links(text)]
 
 
 def extract_bsky_text(post_content: str) -> str:
@@ -129,21 +134,32 @@ def build_bsky_retry_prompt(post_path: Path, current_length: int) -> str:
     )
 
 
-def get_previous_urls(n: int = DEDUP_EDITIONS) -> list[str]:
-    """Collect URLs from the most recent n editions for deduplication."""
+def get_previous_entries(n: int = DEDUP_EDITIONS) -> list[dict]:
+    """Collect link entries from the most recent n editions for deduplication.
+
+    Each entry is {"url": str, "title": str, "edition": int}. Titles let the
+    agent recognize papers by name in the dedup block instead of having to
+    mentally resolve bare URLs.
+    """
     files = sorted(EDITIONS_DIR.glob("*.md"), reverse=True)
-    urls = []
+    entries = []
     count = 0
     for f in files:
         try:
-            int(f.stem)
+            edition = int(f.stem)
         except ValueError:
             continue
-        urls.extend(extract_urls(f.read_text()))
+        for title, url in extract_links(f.read_text()):
+            entries.append({"url": url, "title": title.strip(), "edition": edition})
         count += 1
         if count >= n:
             break
-    return urls
+    return entries
+
+
+def get_previous_urls(n: int = DEDUP_EDITIONS) -> list[str]:
+    """Collect URLs from the most recent n editions. Used by the dedup validator."""
+    return [e["url"] for e in get_previous_entries(n)]
 
 
 def verify_links(content: str) -> list[str]:
@@ -163,7 +179,7 @@ def verify_links(content: str) -> list[str]:
 
 def build_prompt(sources: list[dict[str, str]], number: int, date: str,
                  output_path: Path, post_path: Path, aris_path: Path,
-                 previous_urls: list[str] | None = None) -> str:
+                 previous_entries: list[dict] | None = None) -> str:
     """Build the prompt that tells Claude Code to write the edition file."""
     today = datetime.now().strftime("%Y-%m-%d")
     week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
@@ -177,11 +193,16 @@ def build_prompt(sources: list[dict[str, str]], number: int, date: str,
     template = TEMPLATE_FILE.read_text()
 
     dedup_block = ""
-    if previous_urls:
-        url_list = "\n".join(f"- {u}" for u in previous_urls)
+    if previous_entries:
+        def fmt(e: dict) -> str:
+            title = e["title"]
+            if len(title) > 100:
+                title = title[:97] + "..."
+            return f'- "{title}" (edition {str(e["edition"]).zfill(3)}) -- {e["url"]}'
+        entry_list = "\n".join(fmt(e) for e in previous_entries)
         dedup_block = f"""
 ALREADY COVERED (do not include these URLs or stories about the same topic):
-{url_list}
+{entry_list}
 """
 
     # Read inbox for manually submitted links
@@ -322,7 +343,8 @@ def main():
     output_path = EDITIONS_DIR / f"{padded}.md"
     post_path = EDITIONS_DIR / f"{padded}.post.md"
     aris_path = EDITIONS_DIR / f"{padded}.aris.md"
-    previous_urls = get_previous_urls()
+    previous_entries = get_previous_entries()
+    previous_urls = [e["url"] for e in previous_entries]
 
     if args.dry_run:
         print(f"Would scan {len(sources)} sources")
@@ -330,8 +352,8 @@ def main():
         print(f"Would write social posts to {post_path}")
         print(f"Would write @aris-pub quote-repost framing to {aris_path}")
         print(f"Publish date: {date}")
-        if previous_urls:
-            print(f"Would exclude {len(previous_urls)} URLs from recent editions")
+        if previous_entries:
+            print(f"Would exclude {len(previous_entries)} entries from recent editions")
         return
 
     api_key = os.environ.get("RESEND_API_KEY")
@@ -353,11 +375,11 @@ def main():
         return
     print(f"Preflight OK: {msg}")
 
-    if previous_urls:
-        print(f"Dedup: excluding {len(previous_urls)} URLs from recent editions")
+    if previous_entries:
+        print(f"Dedup: excluding {len(previous_entries)} entries from recent editions")
 
     print(f"Scanning sources for edition No. {padded}...")
-    prompt = build_prompt(sources, number, date, output_path, post_path, aris_path, previous_urls)
+    prompt = build_prompt(sources, number, date, output_path, post_path, aris_path, previous_entries)
 
     try:
         exit_code, output = run_claude(prompt)
