@@ -10,6 +10,7 @@ import pytest
 from curate import (
     BSKY_MAX_CHARS,
     build_bsky_retry_prompt,
+    build_dedup_retry_prompt,
     extract_bsky_text,
     extract_urls,
     get_previous_urls,
@@ -316,6 +317,24 @@ class TestExtractBskyText:
         )
         bsky = extract_bsky_text(content)
         assert len(bsky) > BSKY_MAX_CHARS
+
+
+class TestBuildDedupRetryPrompt:
+    def test_lists_each_duplicate_url(self):
+        urls = ["https://arxiv.org/abs/2605.28655", "https://www.nature.com/articles/x"]
+        prompt = build_dedup_retry_prompt(Path("/tmp/011.md"), urls)
+        for u in urls:
+            assert u in prompt
+
+    def test_includes_path_and_safeguards(self):
+        prompt = build_dedup_retry_prompt(Path("/tmp/011.md"), ["https://example.com"])
+        assert "/tmp/011.md" in prompt
+        # Must protect synthesis paragraph + frontmatter from accidental edits
+        assert "synthesis paragraph" in prompt.lower() or "synthesis" in prompt.lower()
+        assert "frontmatter" in prompt.lower()
+        # Must instruct removal, not addition
+        assert "remove" in prompt.lower()
+        assert "do not add new items" in prompt.lower()
 
 
 class TestBuildBskyRetryPrompt:

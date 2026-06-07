@@ -100,6 +100,21 @@ def extract_bsky_text(post_content: str) -> str:
     return "\n".join(bsky_lines).strip()
 
 
+def build_dedup_retry_prompt(output_path: Path, duplicates: list[str]) -> str:
+    """Tell the agent to remove URLs that already appeared in recent editions."""
+    url_list = "\n".join(f"- {u}" for u in duplicates)
+    return (
+        f"The edition draft at {output_path} contains URLs that were already published "
+        f"in recent editions and must be removed:\n\n{url_list}\n\n"
+        f"Read {output_path}, then remove every item that links to any of the URLs above. "
+        f"You may rename or merge sections if a section becomes empty after removal, but "
+        f"do not change the synthesis paragraph at the top, the frontmatter, or any URLs "
+        f"not listed above. Do not add new items.\n\n"
+        f"Use the Write tool to overwrite {output_path}. "
+        f"After writing, say ONLY 'Dedup retry complete' and nothing else."
+    )
+
+
 def build_bsky_retry_prompt(post_path: Path, current_length: int) -> str:
     """Tell the agent the BSky text was too long and to rewrite only that section."""
     return (
@@ -370,6 +385,37 @@ def main():
         print(f"Warning: {len(broken)} broken link(s) found:")
         for b in broken:
             print(b)
+
+    if previous_urls:
+        duplicates = [u for u in extract_urls(content) if u in set(previous_urls)]
+        if duplicates:
+            print(
+                f"Dedup violation: {len(duplicates)} URL(s) in {output_path} already "
+                f"covered in recent editions. Asking agent to remove "
+                f"(one retry; no email unless retry also fails)."
+            )
+            for u in duplicates:
+                print(f"  duplicate: {u}")
+            try:
+                retry_code, retry_output = run_claude(
+                    build_dedup_retry_prompt(output_path, duplicates)
+                )
+            except subprocess.TimeoutExpired:
+                fail("Dedup retry timed out after 10 minutes.")
+                return
+            print(f"Retry: {retry_output}")
+            if retry_code != 0:
+                fail(f"Dedup retry exited {retry_code}\nOutput: {retry_output[:1000]}")
+                return
+            content = output_path.read_text()
+            remaining = [u for u in extract_urls(content) if u in set(previous_urls)]
+            if remaining:
+                fail(
+                    f"Dedup retry didn't remove all duplicates ({len(remaining)} remain). "
+                    f"Manual fix needed."
+                )
+                return
+            print(f"Dedup retry succeeded: all {len(duplicates)} duplicates removed.")
 
     if post_path.exists():
         bsky_text = extract_bsky_text(post_path.read_text())
