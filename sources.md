@@ -13,6 +13,7 @@ Feeds, blogs, and outlets to scan for Hallway Track links.
 ## Institutional & Industry
 
 - [The Scholarly Kitchen](https://scholarlykitchen.sspnet.org/) - AI in peer review and publishing infrastructure
+- [Ithaka S+R](https://sr.ithaka.org/) - Strategic research on AI, libraries, and scholarly communication infrastructure
 - [COPE AI Focus](https://publicationethics.org/cope-focus/cope-focus-artificial-intelligence) - AI authorship and disclosure policy
 - [Elicit Blog](https://elicit.com/blog) - AI-assisted literature review tooling
 - [Nature Machine Intelligence Editorials](https://www.nature.com/natmachintell/articles?type=editorial) - AI methodology standards
