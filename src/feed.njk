@@ -14,19 +14,14 @@ eleventyExcludeFromCollections: true
         <name>{{ metadata.author.name }}</name>
         <email>{{ metadata.author.email }}</email>
     </author>
-    {%- set feedItems = collections.edition | mergedFeed(collections.post) %}
-    {%- for item in feedItems %}
-    {%- set absoluteItemUrl = item.url | absoluteUrl(metadata.url) %}
+    {%- for post in collections.edition | reverse %}
+    {%- set absolutePostUrl = post.url | absoluteUrl(metadata.url) %}
     <entry>
-        {%- if item.data.number %}
-        <title>{{ metadata.title }} No. {{ item.data.number | padStart(3) }}{% if item.data.title %}: {{ item.data.title }}{% endif %}</title>
-        {%- else %}
-        <title>{{ metadata.title }} / {{ metadata.postSeriesName }}: {{ item.data.title }}</title>
-        {%- endif %}
-        <link href="{{ absoluteItemUrl }}"/>
-        <updated>{{ item.date | dateToRfc3339 }}</updated>
-        <id>{{ absoluteItemUrl }}</id>
-        <content type="html">{{ item.content | htmlToAbsoluteUrls(absoluteItemUrl) }}</content>
+        <title>{{ metadata.title }} No. {{ post.data.number | padStart(3) }}{% if post.data.title %}: {{ post.data.title }}{% endif %}</title>
+        <link href="{{ absolutePostUrl }}"/>
+        <updated>{{ post.date | dateToRfc3339 }}</updated>
+        <id>{{ absolutePostUrl }}</id>
+        <content type="html">{{ post.content | htmlToAbsoluteUrls(absolutePostUrl) }}</content>
     </entry>
     {%- endfor %}
 </feed>

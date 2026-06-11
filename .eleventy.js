@@ -38,26 +38,9 @@ module.exports = function(eleventyConfig) {
       .filter(item => new Date(item.data.date) <= now);
   });
 
-  eleventyConfig.addCollection("post", function(collectionApi) {
-    const now = new Date();
-    return collectionApi.getFilteredByTag("post")
-      .filter(item => !item.data.draft)
-      .filter(item => new Date(item.data.date) <= now);
-  });
-
   eleventyConfig.addFilter("absoluteUrl", (url, base) => {
     if (!base) return url;
     return new URL(url, base).toString();
-  });
-
-  eleventyConfig.addFilter("featuredInEdition", (posts, editionNumber) => {
-    if (!posts) return [];
-    return posts.filter(p => p.data.featureInEdition === editionNumber);
-  });
-
-  eleventyConfig.addFilter("mergedFeed", (editions, posts) => {
-    const all = [...(editions || []), ...(posts || [])];
-    return all.sort((a, b) => new Date(b.date) - new Date(a.date));
   });
 
   return {
