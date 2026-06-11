@@ -12,6 +12,21 @@ layout: base.njk
     <div class="edition-body">
         {{ content | safe }}
     </div>
+
+    {% set featuredPosts = collections.post | featuredInEdition(number) %}
+    {% if featuredPosts.length > 0 %}
+    <section class="featured-posts">
+        <h2 class="featured-posts-heading">{{ metadata.postSeriesName }}</h2>
+        {% for post in featuredPosts %}
+        <article class="post-teaser">
+            <h3 class="post-teaser-title"><a href="{{ post.url }}">{{ post.data.title }}</a></h3>
+            {% if post.data.summary %}<p class="post-teaser-summary">{{ post.data.summary }}</p>{% endif %}
+            <a href="{{ post.url }}" class="post-teaser-link">Read the full piece &rarr;</a>
+        </article>
+        {% endfor %}
+    </section>
+    {% endif %}
+
     {% set prevEdition = collections.edition | getPreviousCollectionItem(page) %}
     {% set nextEdition = collections.edition | getNextCollectionItem(page) %}
     {% if prevEdition or nextEdition %}

@@ -1,0 +1,30 @@
+---
+layout: base.njk
+permalink: /post/
+pageTitle: "{{ metadata.postSeriesName }}"
+description: "{{ metadata.postSeriesDescription }}"
+eleventyExcludeFromCollections: true
+---
+
+<section class="post-index">
+    <header class="post-index-header">
+        <h1 class="post-index-title">{{ metadata.postSeriesName }}</h1>
+        <p class="post-index-description">{{ metadata.postSeriesDescription }}</p>
+    </header>
+
+    {% if collections.post.length > 0 %}
+    <ol class="post-index-list">
+        {% for post in collections.post | reverse %}
+        <li class="post-index-item">
+            <article>
+                <h2 class="post-index-item-title"><a href="{{ post.url }}">{{ post.data.title }}</a></h2>
+                {% if post.data.summary %}<p class="post-index-item-summary">{{ post.data.summary }}</p>{% endif %}
+                <time class="post-index-item-date" datetime="{{ post.data.date | isoDate }}">{{ post.data.date | dateFormat }}</time>
+            </article>
+        </li>
+        {% endfor %}
+    </ol>
+    {% else %}
+    <p class="post-index-empty">No essays yet.</p>
+    {% endif %}
+</section>

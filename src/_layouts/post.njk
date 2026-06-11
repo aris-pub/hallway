@@ -1,0 +1,61 @@
+---
+layout: base.njk
+---
+
+<article class="post">
+    <header class="post-header">
+        <p class="post-series">{{ metadata.postSeriesName }}</p>
+        <h1 class="post-title">{{ title }}</h1>
+        {% if summary %}<p class="post-summary">{{ summary }}</p>{% endif %}
+        <time class="post-date" datetime="{{ date | isoDate }}">{{ date | dateFormat }}</time>
+    </header>
+
+    <div class="post-body">
+        {{ content | safe }}
+    </div>
+
+    <aside class="post-discussion">
+        {% if discussionUrl %}
+        <a href="{{ discussionUrl }}" class="post-discussion-link post-discussion-link-primary">
+            Discuss this piece on Bluesky &rarr;
+        </a>
+        {% else %}
+        <a href="https://bsky.app/profile/leotrs.bsky.social" class="post-discussion-link">
+            Find me on Bluesky to discuss &rarr;
+        </a>
+        {% endif %}
+    </aside>
+
+    {% set prevPost = collections.post | getPreviousCollectionItem(page) %}
+    {% set nextPost = collections.post | getNextCollectionItem(page) %}
+    {% if prevPost or nextPost %}
+    <nav class="post-nav">
+        {% if prevPost %}
+        <a href="{{ prevPost.url }}" class="post-nav-link post-nav-prev">
+            <span class="post-nav-label">Previous</span>
+            <span class="post-nav-title">{{ prevPost.data.title }}</span>
+        </a>
+        {% else %}
+        <span></span>
+        {% endif %}
+        {% if nextPost %}
+        <a href="{{ nextPost.url }}" class="post-nav-link post-nav-next">
+            <span class="post-nav-label">Next</span>
+            <span class="post-nav-title">{{ nextPost.data.title }}</span>
+        </a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</article>
+
+<div class="subscribe">
+    <h2 class="subscribe-heading">Get it in your inbox</h2>
+    <form method="POST" action="/.netlify/functions/subscribe">
+        <p class="hidden"><label>Don't fill this out: <input name="bot-field"></label></p>
+        <div class="subscribe-form">
+            <input type="email" name="email" placeholder="you@example.com" required aria-label="Email address">
+            <button type="submit">Subscribe</button>
+        </div>
+        <p class="subscribe-note">Weekly edition + occasional {{ metadata.postSeriesName }} essays. Unsubscribe anytime. See our <a href="/privacy/">privacy policy</a>.</p>
+    </form>
+</div>

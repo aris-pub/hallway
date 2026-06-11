@@ -657,3 +657,301 @@ footer {
         width: 100%;
     }
 }
+
+/* ============================================================
+   Posts (Soapbox series — long-form standalone essays)
+   ============================================================ */
+
+.post {
+    margin-bottom: var(--space-lg);
+}
+
+.post-header {
+    margin-bottom: var(--space-md);
+}
+
+.post-series {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 0 0 var(--space-xs);
+}
+
+.post-title {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    margin: 0 0 var(--space-sm);
+}
+
+.post-summary {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-sm);
+}
+
+.post-date {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--text-tertiary);
+}
+
+/* Long-form body typography */
+
+.post-body {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: var(--text-primary);
+    max-width: 36em;
+}
+
+.post-body p {
+    margin: 0 0 var(--space-sm);
+}
+
+.post-body h2 {
+    font-family: var(--font-sans);
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin: var(--space-md) 0 var(--space-xs);
+}
+
+.post-body h3 {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: var(--space-md) 0 var(--space-xs);
+}
+
+.post-body blockquote {
+    border-left: 2px solid var(--border-light);
+    padding-left: var(--space-sm);
+    margin: var(--space-sm) 0;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.post-body code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Cascadia Mono", "Liberation Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--bg-soft, rgba(0,0,0,0.04));
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+}
+
+.post-body ul, .post-body ol {
+    padding-left: 1.25em;
+    margin: 0 0 var(--space-sm);
+}
+
+.post-body li {
+    margin-bottom: 0.35rem;
+}
+
+.post-body a {
+    color: var(--accent);
+}
+
+/* Discussion link */
+
+.post-discussion {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-light);
+}
+
+.post-discussion-link {
+    display: inline-block;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.5rem 0;
+}
+
+.post-discussion-link:hover {
+    color: var(--accent);
+}
+
+.post-discussion-link-primary {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Post navigation */
+
+.post-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-light);
+    gap: var(--space-md);
+}
+
+.post-nav-link {
+    color: var(--text-primary);
+    max-width: 45%;
+    transition: color 0.2s ease;
+}
+
+.post-nav-link:hover {
+    color: var(--accent);
+}
+
+.post-nav-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: 0.15rem;
+}
+
+.post-nav-title {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+.post-nav-next {
+    text-align: right;
+}
+
+/* Featured posts (embedded in editions) */
+
+.featured-posts {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-light);
+}
+
+.featured-posts-heading {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 0 0 var(--space-sm);
+}
+
+.post-teaser {
+    margin-bottom: var(--space-sm);
+}
+
+.post-teaser:last-child {
+    margin-bottom: 0;
+}
+
+.post-teaser-title {
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+    font-weight: 500;
+    line-height: 1.3;
+    margin: 0 0 0.3rem;
+}
+
+.post-teaser-title a {
+    color: var(--text-primary);
+}
+
+.post-teaser-title a:hover {
+    color: var(--accent);
+}
+
+.post-teaser-summary {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.3rem;
+    line-height: 1.5;
+}
+
+.post-teaser-link {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--accent);
+}
+
+/* Post index page */
+
+.post-index-header {
+    margin-bottom: var(--space-md);
+}
+
+.post-index-title {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 400;
+    margin: 0 0 var(--space-xs);
+}
+
+.post-index-description {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.post-index-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.post-index-item {
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.post-index-item:last-child {
+    border-bottom: none;
+}
+
+.post-index-item-title {
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    font-weight: 500;
+    line-height: 1.3;
+    margin: 0 0 0.3rem;
+}
+
+.post-index-item-title a {
+    color: var(--text-primary);
+}
+
+.post-index-item-title a:hover {
+    color: var(--accent);
+}
+
+.post-index-item-summary {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.3rem;
+    line-height: 1.5;
+}
+
+.post-index-item-date {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+}
+
+.post-index-empty {
+    color: var(--text-tertiary);
+    font-style: italic;
+}

@@ -5,5 +5,8 @@
   "author": {
     "name": "Leo Torres",
     "email": "hello@aris.pub"
-  }
+  },
+  "postSeriesName": "Soapbox",
+  "postSeriesSlug": "post",
+  "postSeriesDescription": "Long-form essays under the Hallway Track umbrella. Leo's first-person analytical pieces, published occasionally alongside the weekly edition."
 }
