@@ -41,26 +41,32 @@ def read_edition(number: str) -> dict:
     if draft:
         raise ValueError(f"Edition {padded} is still a draft. Remove 'draft: true' before broadcasting.")
 
+    lead_match = re.search(r"^lead:\s*(\S+)\s*$", frontmatter, re.MULTILINE)
+    lead_url = lead_match.group(1) if lead_match else None
+
+    date_match = re.search(r"^date:\s*(\S+)\s*$", frontmatter, re.MULTILINE)
+    date_str = date_match.group(1) if date_match else None
+
     return {
         "number": padded,
         "body": body,
         "url": f"{SITE_URL}/no/{padded}/",
+        "lead": lead_url,
+        "date": date_str,
     }
 
 
-def process_inline(text: str) -> str:
-    """Process inline markdown: *italic*, **bold**, [links](url)."""
-    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
-    text = re.sub(r"\*(.+?)\*", r'<em style="font-size: 14px; color: #7a7a7a; font-style: italic;">\1</em>', text)
-    text = re.sub(r"\[(.+?)\]\((.+?)\)", r'<a href="\2" style="color: #157067;">\1</a>', text)
-    return text
+def normalize_url(url: str) -> str:
+    """Normalize URL for comparison: strip trailing slash and utm_* params."""
+    url = url.strip()
+    url = re.sub(r"[?&]utm_[^&]*", "", url)
+    url = url.rstrip("?&")
+    url = url.rstrip("/")
+    return url
 
 
-def markdown_to_html(edition: dict) -> str:
-    """Convert edition markdown to simple HTML for email."""
-    body = edition["body"]
-
-    # Join continuation lines into paragraphs (split on blank lines)
+def parse_blocks(body: str):
+    """Parse edition body into (synthesis_paragraphs, sections)."""
     paragraphs = []
     current = []
     for line in body.split("\n"):
@@ -73,33 +79,164 @@ def markdown_to_html(edition: dict) -> str:
     if current:
         paragraphs.append(" ".join(current))
 
-    html_parts = []
-    first_h2 = True
+    synthesis = []
+    sections = []
+    current_section = None
+    current_item = None
+    in_synthesis = True
+
+    def flush_item():
+        nonlocal current_item
+        if current_item and current_section is not None:
+            current_section["items"].append(current_item)
+        current_item = None
+
     for para in paragraphs:
         if para.startswith("## "):
-            if first_h2:
-                html_parts.append(
-                    f'<h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; '
-                    f'letter-spacing: 0.05em; color: #7a7a7a; margin: 0 0 16px 0;">{para[3:]}</h2>'
-                )
-                first_h2 = False
-            else:
-                html_parts.append(
-                    f'<h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; '
-                    f'letter-spacing: 0.05em; color: #7a7a7a; margin: 32px 0 16px 0; '
-                    f'padding-top: 24px; border-top: 1px solid #e2e8e6;">{para[3:]}</h2>'
-                )
+            flush_item()
+            in_synthesis = False
+            current_section = {"name": para[3:], "items": []}
+            sections.append(current_section)
         elif para.startswith("- ["):
+            flush_item()
             match = re.match(r"- \[(.+?)\]\((.+?)\)(.*)", para)
             if match:
                 title, url, rest = match.groups()
-                html_parts.append(f'<p style="margin: 0 0 4px 0;"><strong><a href="{url}" style="color: #157067;">{title}</a></strong>{process_inline(rest)}</p>')
+                current_item = {"title": title, "url": url, "source": "", "description": "", "rest_inline": rest.strip()}
+        elif current_item is not None:
+            stripped = para.strip()
+            if not current_item["source"] and stripped.startswith("*") and stripped.endswith("*"):
+                current_item["source"] = stripped.strip("*").strip()
+            elif not current_item["description"]:
+                current_item["description"] = stripped
             else:
-                html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(para[2:])}</p>')
-        else:
-            html_parts.append(f'<p style="margin: 0 0 16px 0; line-height: 1.6;">{process_inline(para)}</p>')
+                current_item["description"] += " " + stripped
+        elif in_synthesis:
+            synthesis.append(para)
 
-    content = "\n".join(html_parts)
+    flush_item()
+    return synthesis, sections
+
+
+def format_date(date_str: str) -> str:
+    """Convert YYYY-MM-DD to 'MONTH D YYYY' uppercase, no comma."""
+    if not date_str:
+        return ""
+    months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+              "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]
+    try:
+        y, m, d = date_str.split("-")
+        return f"{months[int(m) - 1]} {int(d)} {y}"
+    except (ValueError, IndexError):
+        return date_str.upper()
+
+
+def render_item(item: dict, title_size: int = 18) -> str:
+    """Render a single item (non-lead) as HTML paragraphs."""
+    parts = [
+        f'<p style="margin: 0 0 4px 0; font-size: {title_size}px; font-weight: 700; line-height: 1.3;">'
+        f'<a href="{item["url"]}" style="color: #111; text-decoration: none;">{item["title"]}</a></p>'
+    ]
+    if item["source"]:
+        parts.append(
+            f'<p style="margin: 0 0 8px 0; font-size: 12px; color: #6b6b6b;">{item["source"]}</p>'
+        )
+    if item["description"]:
+        parts.append(
+            f'<p style="margin: 0; font-size: 14px; color: #4a4a4a; line-height: 1.5;">{item["description"]}</p>'
+        )
+    return "\n".join(parts)
+
+
+def render_lead(item: dict) -> str:
+    """Render the lead item with bold left bar and tinted background."""
+    inner_parts = [
+        f'<p style="margin: 0 0 8px 0; font-size: 11px; letter-spacing: 0.1em; '
+        f'text-transform: uppercase; color: #157067; font-weight: 600;">This Week</p>',
+        f'<p style="margin: 0 0 6px 0; font-size: 22px; font-weight: 700; line-height: 1.25; color: #111;">'
+        f'<a href="{item["url"]}" style="color: #111; text-decoration: none;">{item["title"]}</a></p>'
+    ]
+    if item["source"]:
+        inner_parts.append(
+            f'<p style="margin: 0 0 10px 0; font-size: 12px; color: #6b6b6b;">{item["source"]}</p>'
+        )
+    if item["description"]:
+        inner_parts.append(
+            f'<p style="margin: 0; font-size: 14px; color: #4a4a4a; line-height: 1.5;">{item["description"]}</p>'
+        )
+    inner = "\n".join(inner_parts)
+    return (
+        f'<table cellpadding="0" cellspacing="0" border="0" width="100%" role="presentation" style="margin: 32px 0;">'
+        f'<tr><td style="border-left: 5px solid #157067; background: #ecf4f0; padding: 20px 22px; border-radius: 4px;">{inner}</td></tr>'
+        f'</table>'
+    )
+
+
+def markdown_to_html(edition: dict) -> str:
+    """Render edition as HTML for the email broadcast."""
+    synthesis, sections = parse_blocks(edition["body"])
+
+    lead_url_norm = normalize_url(edition["lead"]) if edition["lead"] else None
+    lead_item = None
+    if lead_url_norm:
+        for section in sections:
+            for item in section["items"]:
+                if normalize_url(item["url"]) == lead_url_norm:
+                    lead_item = item
+                    section["items"].remove(item)
+                    break
+            if lead_item:
+                break
+
+    header_date = format_date(edition["date"])
+    header_html = (
+        f'<p style="margin: 0 0 4px 0; font-size: 12px; letter-spacing: 0.08em; '
+        f'text-transform: uppercase; color: #6b6b6b;">'
+        f'THE HALLWAY TRACK&nbsp;&nbsp;&nbsp;NO. {edition["number"]}'
+        f'</p>'
+    )
+    if header_date:
+        header_html += (
+            f'<p style="margin: 0; font-size: 12px; letter-spacing: 0.08em; '
+            f'text-transform: uppercase; color: #6b6b6b;">{header_date}</p>'
+        )
+
+    synthesis_html = ""
+    if synthesis:
+        parts = [
+            f'<p style="margin: 0 0 16px 0; font-size: 16px; color: #111; line-height: 1.6;">{p}</p>'
+            for p in synthesis
+        ]
+        synthesis_html = "\n".join(parts)
+
+    rule = '<hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">'
+
+    lead_html = render_lead(lead_item) if lead_item else ""
+
+    sections_html_parts = []
+    first_section = True
+    for section in sections:
+        if not section["items"]:
+            continue
+        section_header = (
+            f'<p style="margin: 0 0 16px 0; font-size: 11px; letter-spacing: 0.1em; '
+            f'text-transform: uppercase; color: #6b6b6b; font-weight: 600;">{section["name"]}</p>'
+        )
+        items_html = '<div style="margin-bottom: 24px;"></div>'.join(render_item(item) for item in section["items"])
+        prefix = "" if first_section else rule
+        sections_html_parts.append(prefix + section_header + items_html)
+        first_section = False
+    sections_html = "\n".join(sections_html_parts)
+
+    footer_html = (
+        f'<p style="margin: 0; font-size: 12px; color: #6b6b6b; text-align: center;">'
+        f'<a href="{edition["url"]}" style="color: #6b6b6b; text-decoration: underline;">Read online</a>'
+        f'&nbsp;&middot;&nbsp;'
+        f'<a href="{{{{{{RESEND_UNSUBSCRIBE_URL}}}}}}" style="color: #6b6b6b; text-decoration: underline;">Unsubscribe</a>'
+        f'&nbsp;&middot;&nbsp;'
+        f'Part of <a href="https://aris.pub" style="color: #6b6b6b; text-decoration: underline;">The Aris Program</a>'
+        f'</p>'
+    )
 
     return f"""\
 <!DOCTYPE html>
@@ -108,25 +245,22 @@ def markdown_to_html(edition: dict) -> str:
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; line-height: 1.6; color: #0a0a0a; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #157067; margin: 0; font-weight: 400;">The Hallway Track</h1>
-        <p style="color: #7a7a7a; margin: 5px 0 0 0; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase;">No. {edition["number"]}</p>
-    </div>
-
-    <div style="background: #ffffff; border-radius: 8px; padding: 30px; margin-bottom: 30px; border: 1px solid #e2e8e6; border-top: 3px solid #157067;">
-        {content}
-    </div>
-
-    <div style="text-align: center; color: #7a7a7a; font-size: 14px; border-top: 1px solid #e2e8e6; padding-top: 20px;">
-        <p><a href="{edition["url"]}" style="color: #157067;">Read online</a></p>
-        <p style="margin-top: 15px; font-size: 12px;">
-            Part of <a href="https://aris.pub" style="color: #157067;">The Aris Program</a>
-        </p>
-        <p style="margin-top: 10px; font-size: 11px;">
-            <a href="{{{{{{RESEND_UNSUBSCRIBE_URL}}}}}}" style="color: #7a7a7a;">Unsubscribe</a>
-        </p>
-    </div>
+<body style="margin: 0; padding: 0; background: #ffffff;">
+<table cellpadding="0" cellspacing="0" border="0" width="100%" role="presentation" style="background: #ffffff;">
+<tr><td align="center" style="padding: 32px 16px;">
+<table cellpadding="0" cellspacing="0" border="0" width="600" role="presentation" style="max-width: 600px; width: 100%;">
+<tr><td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111;">
+{header_html}
+<div style="height: 32px;"></div>
+{synthesis_html}
+{lead_html}
+{sections_html}
+<hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+{footer_html}
+</td></tr>
+</table>
+</td></tr>
+</table>
 </body>
 </html>"""
 
