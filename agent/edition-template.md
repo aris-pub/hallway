@@ -4,6 +4,7 @@ date: DATE
 title: "SHORT COMMA-SEPARATED SUMMARY OF KEY TOPICS"
 pageTitle: "No. PADDED"
 description: "The Hallway Track No. PADDED - How AI is affecting the practice of science"
+lead: LEAD_URL
 draft: true
 ---
 

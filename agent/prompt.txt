@@ -13,6 +13,7 @@ The file must follow this template exactly:
 
 Replace NUMBER with {number}, DATE with {date}, PADDED with {padded}.
 Replace SHORT COMMA-SEPARATED SUMMARY OF KEY TOPICS with a brief title summarizing the 2-3 most notable items (e.g., "AI Scientist v2, ICML watermarks, scientific monoculture").
+Replace LEAD_URL with the URL of the single most significant item in this edition — the one the Bluesky hook will lead with and the email template will feature as the marquee. This MUST be a URL that appears verbatim as a link in one of the section items below. The lead and the Bluesky hook should be aligned: if the hook is about item X, the lead is item X's URL. CONSTRAINT: the lead's section must contain at least one other item besides the lead. If your strongest item would leave its section with only that one item, either find another item that fits that section or pick a different lead from a section that already has multiple items.
 Replace the example sections and links with real content from your search.
 
 TODAY'S DATE: {today}
