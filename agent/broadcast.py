@@ -131,6 +131,15 @@ def format_date(date_str: str) -> str:
         return date_str.upper()
 
 
+def inline_markdown_to_html(text: str) -> str:
+    """Convert inline [text](url) markdown into HTML anchors. Body-text use only."""
+    return re.sub(
+        r"\[([^\]]+)\]\(([^)]+)\)",
+        lambda m: f'<a href="{m.group(2)}" style="color: #157067;">{m.group(1)}</a>',
+        text,
+    )
+
+
 def render_item(item: dict, title_size: int = 18) -> str:
     """Render a single item (non-lead) as HTML paragraphs."""
     parts = [
@@ -143,7 +152,7 @@ def render_item(item: dict, title_size: int = 18) -> str:
         )
     if item["description"]:
         parts.append(
-            f'<p style="margin: 0; font-size: 14px; color: #4a4a4a; line-height: 1.5;">{item["description"]}</p>'
+            f'<p style="margin: 0; font-size: 14px; color: #4a4a4a; line-height: 1.5;">{inline_markdown_to_html(item["description"])}</p>'
         )
     return "\n".join(parts)
 
@@ -162,7 +171,7 @@ def render_lead(item: dict) -> str:
         )
     if item["description"]:
         inner_parts.append(
-            f'<p style="margin: 0; font-size: 14px; color: #4a4a4a; line-height: 1.5;">{item["description"]}</p>'
+            f'<p style="margin: 0; font-size: 14px; color: #4a4a4a; line-height: 1.5;">{inline_markdown_to_html(item["description"])}</p>'
         )
     inner = "\n".join(inner_parts)
     return (
@@ -204,7 +213,7 @@ def markdown_to_html(edition: dict) -> str:
     synthesis_html = ""
     if synthesis:
         parts = [
-            f'<p style="margin: 0 0 16px 0; font-size: 16px; color: #111; line-height: 1.6;">{p}</p>'
+            f'<p style="margin: 0 0 16px 0; font-size: 16px; color: #111; line-height: 1.6;">{inline_markdown_to_html(p)}</p>'
             for p in synthesis
         ]
         synthesis_html = "\n".join(parts)
