@@ -242,7 +242,7 @@ def run_claude(prompt: str) -> tuple[int, str]:
         ["claude", "-p", prompt, "--allowedTools", "WebSearch,WebFetch,Write,Read"],
         capture_output=True,
         text=True,
-        timeout=600,
+        timeout=1200,
     )
     return result.returncode, result.stdout.strip()
 
