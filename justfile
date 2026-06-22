@@ -7,15 +7,15 @@ publish NUMBER:
 
 # Run the curation agent (scans sources, writes draft, sends notification email)
 agent:
-    uv run --with httpx,resend python agent/curate.py
+    uv run python agent/curate.py
 
 # Preview what the agent would do without scanning or writing
 agent-dry:
-    uv run --with httpx,resend python agent/curate.py --dry-run
+    uv run python agent/curate.py --dry-run
 
 # Post to Bluesky (optionally at a specific time, e.g., just bsky 003 "text" 14:00)
 bsky NUMBER TEXT AT="":
-    uv run --with httpx python agent/post_bsky.py {{NUMBER}} "{{TEXT}}" {{ if AT != "" { "--at " + AT } else { "" } }}
+    uv run python agent/post_bsky.py {{NUMBER}} "{{TEXT}}" {{ if AT != "" { "--at " + AT } else { "" } }}
 
 # Add a link to the inbox for the next edition
 inbox LINK:
@@ -24,7 +24,7 @@ inbox LINK:
 
 # Run tests
 test:
-    uv run --with httpx,resend,pytest pytest agent/test_curate.py -v
+    uv run --group dev pytest agent/test_curate.py -v
 
 # Start local dev server
 dev:

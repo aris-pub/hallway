@@ -38,7 +38,7 @@ deploy_and_broadcast() {
     git add -A
     git commit -m "Publish No. ${PADDED}"
     git push
-    uv run --with resend,httpx python agent/broadcast.py "$PADDED"
+    uv run python agent/broadcast.py "$PADDED"
     echo "Deployed and broadcast No. ${PADDED}"
 }
 
@@ -57,12 +57,12 @@ post_social() {
             echo "Set both in .env (handle: your.bsky.social, password: app-password from bsky.app/settings/app-passwords)." >&2
             exit 1
         fi
-        uv run --with httpx python agent/post_bsky.py "$PADDED" "$BSKY_TEXT"
+        uv run python agent/post_bsky.py "$PADDED" "$BSKY_TEXT"
         echo "Posted to Bluesky"
     fi
 
     if [ -n "$LI_TEXT" ] && [ -f ".linkedin-token.json" ]; then
-        uv run --with httpx python agent/post_linkedin.py "$PADDED" "$LI_TEXT"
+        uv run python agent/post_linkedin.py "$PADDED" "$LI_TEXT"
         echo "Posted to LinkedIn"
     elif [ -n "$LI_TEXT" ]; then
         echo ""

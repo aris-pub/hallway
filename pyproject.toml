@@ -1,0 +1,14 @@
+[project]
+name = "hallway-track"
+version = "0.1.0"
+description = "Curation agent and publishing pipeline for The Hallway Track newsletter."
+requires-python = ">=3.10"
+dependencies = [
+    "httpx",
+    "resend",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
