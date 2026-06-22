@@ -468,8 +468,11 @@ def main():
 
     print(f"Draft written to {output_path}")
 
-    # Commit and push draft so it can be reviewed from any machine
-    paths_to_add = [str(output_path), str(post_path)]
+    # Commit and push draft so it can be reviewed from any machine.
+    # Include inbox.md so the agent's Step 1B clear lands in the same commit;
+    # otherwise it sits as uncommitted dirt and breaks the Monday publish.sh
+    # git-pull when upstream has new commits.
+    paths_to_add = [str(output_path), str(post_path), str(INBOX_FILE)]
     if aris_path.exists():
         paths_to_add.append(str(aris_path))
     subprocess.run(["git", "add", *paths_to_add], cwd=REPO_ROOT)

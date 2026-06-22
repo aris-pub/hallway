@@ -4,11 +4,16 @@ Post a Hallway Track edition to Bluesky.
 Usage:
     uv run --with httpx python agent/post_bsky.py 003 "Post text here"
     uv run --with httpx python agent/post_bsky.py 003 "Post text here" --at "14:00"
+
+Multi-paragraph text (paragraphs separated by blank lines) posts as a thread:
+the first paragraph becomes the root post with the edition's link-card embed,
+each subsequent paragraph posts as a reply. `@handle.tld` mentions in any
+paragraph are resolved to DIDs and rendered as real BSky tags.
 """
 
 import argparse
-import json
 import os
+import re
 import time
 from datetime import datetime
 from pathlib import Path
@@ -48,31 +53,64 @@ def upload_image(token: str, image_path: Path) -> dict:
     return resp.json()["blob"]
 
 
-def create_post(token: str, did: str, text: str, number: str) -> dict:
-    """Create a Bluesky post with a link card embed."""
+def resolve_handle(handle: str) -> str:
+    """Resolve a Bluesky handle to its DID for tagging mentions."""
+    resp = httpx.get(
+        "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle",
+        params={"handle": handle},
+    )
+    resp.raise_for_status()
+    return resp.json()["did"]
+
+
+def build_facets(text: str) -> list[dict]:
+    """Build rich-text facets for @mentions in the post text."""
+    facets = []
+    for m in re.finditer(r"@([a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+)", text):
+        handle = m.group(1)
+        try:
+            did = resolve_handle(handle)
+        except Exception:
+            continue
+        byte_start = len(text[: m.start()].encode("utf-8"))
+        byte_end = len(text[: m.end()].encode("utf-8"))
+        facets.append({
+            "index": {"byteStart": byte_start, "byteEnd": byte_end},
+            "features": [{"$type": "app.bsky.richtext.facet#mention", "did": did}],
+        })
+    return facets
+
+
+def create_post(token: str, did: str, text: str, number: str, reply_to: dict | None = None) -> dict:
+    """Create a Bluesky post. Root post gets the link-card embed; replies don't."""
     padded = number.zfill(3)
-    url = f"{SITE_URL}/no/{padded}/"
     image_path = IMAGES_DIR / f"{padded}.png"
-
-    embed = {
-        "$type": "app.bsky.embed.external",
-        "external": {
-            "uri": url,
-            "title": f"No. {padded} - The Hallway Track",
-            "description": "How AI is affecting the practice of science.",
-        },
-    }
-
-    if image_path.exists():
-        blob = upload_image(token, image_path)
-        embed["external"]["thumb"] = blob
 
     record = {
         "$type": "app.bsky.feed.post",
         "text": text,
         "createdAt": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z"),
-        "embed": embed,
     }
+    facets = build_facets(text)
+    if facets:
+        record["facets"] = facets
+
+    if reply_to is None:
+        url = f"{SITE_URL}/no/{padded}/"
+        embed = {
+            "$type": "app.bsky.embed.external",
+            "external": {
+                "uri": url,
+                "title": f"No. {padded} - The Hallway Track",
+                "description": "How AI is affecting the practice of science.",
+            },
+        }
+        if image_path.exists():
+            blob = upload_image(token, image_path)
+            embed["external"]["thumb"] = blob
+        record["embed"] = embed
+    else:
+        record["reply"] = {"root": reply_to["root"], "parent": reply_to["parent"]}
 
     resp = httpx.post(
         f"{PDS_HOST}/xrpc/com.atproto.repo.createRecord",
@@ -103,7 +141,7 @@ def wait_until(target_time: str):
 def main():
     parser = argparse.ArgumentParser(description="Post edition to Bluesky")
     parser.add_argument("number", help="Edition number (e.g., 003)")
-    parser.add_argument("text", help="Post text")
+    parser.add_argument("text", help="Post text. Blank-line-separated paragraphs post as a thread.")
     parser.add_argument("--at", help="Wait until HH:MM to post (e.g., 14:00)")
     args = parser.parse_args()
 
@@ -119,9 +157,22 @@ def main():
     print(f"Logging in as {handle}...")
     token, did = login(handle, password)
 
-    print(f"Posting edition {args.number}...")
-    result = create_post(token, did, args.text, args.number)
-    print(f"Posted: {result['uri']}")
+    paragraphs = [p.strip() for p in args.text.split("\n\n") if p.strip()]
+
+    print(f"Posting edition {args.number} ({len(paragraphs)} post{'s' if len(paragraphs) > 1 else ''})...")
+    first = create_post(token, did, paragraphs[0], args.number)
+    print(f"Posted: {first['uri']}")
+    root_ref = {"uri": first["uri"], "cid": first["cid"]}
+    parent_ref = root_ref
+
+    for i, paragraph in enumerate(paragraphs[1:], start=2):
+        print(f"Posting reply {i}/{len(paragraphs)}...")
+        reply = create_post(
+            token, did, paragraph, args.number,
+            reply_to={"root": root_ref, "parent": parent_ref},
+        )
+        print(f"Posted: {reply['uri']}")
+        parent_ref = {"uri": reply["uri"], "cid": reply["cid"]}
 
 
 if __name__ == "__main__":
