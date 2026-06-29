@@ -3,6 +3,7 @@ _site/
 .env
 .linkedin-token.json
 .venv/
+.claude/
 __pycache__/
 *.pyc
 
