@@ -56,6 +56,7 @@ bd close <id>         # Complete work
 2. **Sunday** - `git pull` on laptop. Review `src/no/NNN.md`, edit content, remove `draft: true` from frontmatter.
 3. **Monday** - `just publish NNN` (builds og:images, builds site, deploys to Netlify, emails subscribers).
 4. **Monday** - Post on Bluesky and LinkedIn. Lead with strongest single link, not "new edition out."
+5. **After publishing** - Remind Leo to reach out to one person featured in this edition: a genuine note (email or Bluesky) telling them their work was featured. Suggest who, offer to draft it, but Leo sends it. This is the main audience-growth lever (it builds peer relationships and opens cross-recommendations), not a pitch.
 
 ## Commands
 
