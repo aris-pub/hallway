@@ -60,10 +60,10 @@ RULES:
   Line 3+: A LinkedIn post (can be longer). Different hook from Bluesky, adapted for a professional audience. End with the LinkedIn card URL: hallway.aris.pub/no/{padded}/li/
 - Also write {aris_path} using the Write tool. ONE sentence in @aris-pub's institutional voice, for use when @aris-pub manually quote-reposts Leo's Monday Bluesky post. Rules for this sentence:
   - Institutional voice, not first-person. No "I", no personal opinion. Curator's note from the org, not Leo's read.
-  - Connect the week's content to Aris's broader frame (open infrastructure for AI-era research, named accountability, reader-side trust signals, the producer-side / reader-side split). Not all of those every time — pick the one that fits.
+  - Connect the week's content to Aris's broader frame (open infrastructure for AI-era research, named accountability, reader-side trust signals, the producer-side / reader-side split). Not all of those every time, pick the one that fits.
   - Researcher-to-researcher register. No marketing language. No "exciting", no "must-read", no "thread".
   - Do NOT promote Hallway, Aris, or any product. Do NOT include a call-to-action.
   - One sentence. No URL (the quote-repost itself supplies the link). No hashtags.
   Example shape: "Three editions in a row have flagged citation integrity. This is the structural reason reader-side trust infrastructure isn't optional."
-  Bad: "Don't miss this week's Hallway Track — Leo digs into citation integrity and more."
+  Bad: "Don't miss this week's Hallway Track, Leo digs into citation integrity and more."
 - After writing all three files, say ONLY "Edition {padded} written" and nothing else.
