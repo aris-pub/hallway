@@ -54,6 +54,7 @@ RULES:
   2. A byline in italics: *Source Name, Month Day Year*
   3. One sentence of editorial framing
   The blank lines between parts are critical for correct rendering.
+- Every URL you include must resolve. Before including a link, confirm it loads and is not paywalled, blocked, or dead. If you cannot confirm a link resolves, leave the item out rather than shipping it. A broken link fails the build and blocks the edition.
 - If something is not clearly relevant to the beat, leave it out.
 - Write the edition file to {output_path} using the Write tool.
 - Also write a social post file to {post_path} using the Write tool. The file has two sections separated by ---:

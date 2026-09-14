@@ -120,6 +120,22 @@ def build_dedup_retry_prompt(output_path: Path, duplicates: list[str]) -> str:
     )
 
 
+def build_broken_link_retry_prompt(output_path: Path, broken_urls: list[str]) -> str:
+    """Tell the agent to remove items whose links do not resolve."""
+    url_list = "\n".join(f"- {u}" for u in broken_urls)
+    return (
+        f"The edition draft at {output_path} contains links that do not resolve and "
+        f"must be removed:\n\n{url_list}\n\n"
+        f"Read {output_path}, then remove every item that links to any of the URLs above. "
+        f"You may rename or merge sections if a section becomes empty after removal, but "
+        f"do not change the synthesis paragraph at the top, the frontmatter, or any URLs "
+        f"not listed above. Do not add new items and do not substitute a replacement link "
+        f"for a removed one.\n\n"
+        f"Use the Write tool to overwrite {output_path}. "
+        f"After writing, say ONLY 'Broken link retry complete' and nothing else."
+    )
+
+
 def build_bsky_retry_prompt(post_path: Path, current_length: int) -> str:
     """Tell the agent the BSky text was too long and to rewrite only that section."""
     return (
@@ -162,8 +178,12 @@ def get_previous_urls(n: int = DEDUP_EDITIONS) -> list[str]:
     return [e["url"] for e in get_previous_entries(n)]
 
 
-def verify_links(content: str) -> list[str]:
-    """Check that URLs in the curated content actually resolve. Returns list of broken URLs."""
+def verify_links(content: str) -> list[tuple[str, str]]:
+    """Check that URLs in the curated content resolve.
+
+    Returns a list of (url, reason) for every URL that does not. A link that fails
+    here never ships: the caller asks the agent to drop the item and re-checks.
+    """
     urls = extract_urls(content)
     broken = []
     with httpx.Client(timeout=10, follow_redirects=True) as client:
@@ -171,9 +191,9 @@ def verify_links(content: str) -> list[str]:
             try:
                 resp = client.head(url)
                 if resp.status_code >= 400:
-                    broken.append(f"  {resp.status_code}: {url}")
+                    broken.append((url, str(resp.status_code)))
             except httpx.RequestError:
-                broken.append(f"  UNREACHABLE: {url}")
+                broken.append((url, "UNREACHABLE"))
     return broken
 
 
@@ -404,9 +424,33 @@ def main():
 
     broken = verify_links(content)
     if broken:
-        print(f"Warning: {len(broken)} broken link(s) found:")
-        for b in broken:
-            print(b)
+        print(
+            f"Broken link(s): {len(broken)} URL(s) in {output_path} do not resolve. "
+            f"Asking agent to remove (one retry; the edition does not ship with them)."
+        )
+        for url, reason in broken:
+            print(f"  {reason}: {url}")
+        try:
+            retry_code, retry_output = run_claude(
+                build_broken_link_retry_prompt(output_path, [u for u, _ in broken])
+            )
+        except subprocess.TimeoutExpired:
+            fail("Broken link retry timed out after 10 minutes.")
+            return
+        print(f"Retry: {retry_output}")
+        if retry_code != 0:
+            fail(f"Broken link retry exited {retry_code}\nOutput: {retry_output[:1000]}")
+            return
+        content = output_path.read_text()
+        still_broken = verify_links(content)
+        if still_broken:
+            fail(
+                "Broken link retry did not clear every bad link "
+                f"({len(still_broken)} remain): "
+                + ", ".join(f"{r}: {u}" for u, r in still_broken)
+            )
+            return
+        print(f"Broken link retry succeeded: all {len(broken)} removed.")
 
     if previous_urls:
         duplicates = [u for u in extract_urls(content) if u in set(previous_urls)]
