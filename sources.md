@@ -9,6 +9,7 @@ Feeds, blogs, and outlets to scan for Hallway Track links.
 - [Paired Ends](https://blog.stephenturner.us/) - Stephen Turner, AI in computational biology workflows
 - [Science Integrity Digest](https://scienceintegritydigest.com/) - Elisabeth Bik, AI-generated content in journals
 - [Import AI](https://importai.substack.com/) - Jack Clark, AI research papers and policy
+- [Proofs and Prompts](https://proofsandprompts.com/) - communal blog by mathematicians on how AI is changing mathematical practice, plus a news feed
 
 ## Institutional & Industry
 
