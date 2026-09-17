@@ -1,7 +1,7 @@
 """Tests for the curation agent's deterministic functions."""
 
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -411,3 +411,41 @@ class TestSendFailureNotification:
         send_failure_notification("boom", 7, "test@example.com")
         captured = capsys.readouterr()
         assert "resend down" in captured.out
+
+
+class TestNextPublishDate:
+    """The agent runs on the Saturday before, on the Monday itself, or a day
+    late. All three are the same edition and must produce the same date.
+    Edition 025 was generated on Monday 2026-09-14 and dated 2026-09-21,
+    which would have kept it out of the index and archive for a week.
+    """
+
+    @pytest.mark.parametrize(
+        "run_on,expected",
+        [
+            ("2026-09-12", "2026-09-14"),  # Saturday before, the normal case
+            ("2026-09-13", "2026-09-14"),  # Sunday
+            ("2026-09-14", "2026-09-14"),  # the Monday itself, the 025 bug
+            ("2026-09-15", "2026-09-14"),  # Tuesday, a day late
+            ("2026-09-16", "2026-09-21"),  # Wednesday, now aiming at the next one
+            ("2026-09-18", "2026-09-21"),  # Friday
+            ("2026-09-19", "2026-09-21"),  # the following Saturday
+        ],
+    )
+    def test_resolves_to_the_broadcast_monday(self, run_on, expected):
+        today = datetime.strptime(run_on, "%Y-%m-%d")
+        assert next_publish_date(today) == expected
+
+    def test_always_returns_a_monday(self):
+        start = datetime(2026, 1, 1)
+        for offset in range(400):
+            day = start + timedelta(days=offset)
+            result = datetime.strptime(next_publish_date(day), "%Y-%m-%d")
+            assert result.weekday() == 0
+
+    def test_never_more_than_a_week_out(self):
+        start = datetime(2026, 1, 1)
+        for offset in range(400):
+            day = start + timedelta(days=offset)
+            result = datetime.strptime(next_publish_date(day), "%Y-%m-%d")
+            assert -2 <= (result - day).days <= 6

@@ -42,6 +42,7 @@ announcements (unless they directly affect research practice), AI hype."""
 
 FROM_EMAIL = "hallway@updates.aris.pub"
 REPLY_TO = "hello@aris.pub"
+REVIEW_LABEL = "ht-review"
 
 
 def parse_sources() -> list[dict[str, str]]:
@@ -71,13 +72,18 @@ def next_edition_number() -> int:
     return max(numbers) + 1 if numbers else 1
 
 
-def next_publish_date() -> str:
-    """Next Monday from today, as YYYY-MM-DD."""
-    today = datetime.now()
-    days_ahead = (7 - today.weekday()) % 7
-    if days_ahead == 0:
-        days_ahead = 7
-    return (today + timedelta(days=days_ahead)).strftime("%Y-%m-%d")
+def next_publish_date(today: datetime | None = None) -> str:
+    """The Monday this edition broadcasts on, as YYYY-MM-DD.
+
+    The agent normally runs on the Saturday before, but it also runs on the
+    Monday itself and sometimes a day late. All three mean the same edition, so
+    shift forward five days and take that week's Monday: Sat, Sun, Mon and Tue
+    all resolve to the same Monday, and Wed through Fri look ahead to the next
+    one.
+    """
+    today = today or datetime.now()
+    target = today + timedelta(days=5)
+    return (target - timedelta(days=target.weekday())).strftime("%Y-%m-%d")
 
 
 def extract_links(text: str) -> list[tuple[str, str]]:
@@ -308,22 +314,50 @@ draft: true
     return path
 
 
-def send_notification(number: int, file_path: Path, admin_email: str) -> None:
-    """Send email notification that a draft is ready for review."""
-    padded = str(number).zfill(3)
+def file_review_bead(
+    number: int,
+    file_path: Path,
+    date: str,
+    item_count: int,
+) -> tuple[bool, str]:
+    """File a bead saying the draft is ready for review.
 
-    resend.Emails.send({
-        "from": f"The Hallway Track <{FROM_EMAIL}>",
-        "to": [admin_email],
-        "reply_to": REPLY_TO,
-        "subject": f"Draft ready: No. {padded}",
-        "text": (
-            f"A new draft edition (No. {padded}) has been generated.\n\n"
-            f"File: {file_path}\n\n"
-            f"Review the draft, edit as needed, remove the 'draft: true' "
-            f"frontmatter field, and publish."
-        ),
-    })
+    The bead is the handoff. It reaches Leo's laptop through the existing
+    five-minute beads sync, where watch-review.sh picks it up and starts the
+    review session. Returns (ok, detail).
+    """
+    padded = str(number).zfill(3)
+    title = f"Review and publish The Hallway Track No. {padded}"
+    body = (
+        f"Draft No. {padded} is written, committed and pushed.\n\n"
+        f"Broadcasts: {date}\n"
+        f"Items: {item_count}\n"
+        f"File: {file_path}\n\n"
+        "watch-review.sh on the laptop pulls this, builds with INCLUDE_DRAFTS=1, "
+        "serves it, opens the browser and starts a review session. Close this "
+        "bead when the edition is published."
+    )
+    try:
+        result = subprocess.run(
+            ["bd", "create", title, "-t", "task", "-p", "0",
+             "-l", REVIEW_LABEL, "-d", body],
+            cwd=REPO_ROOT, capture_output=True, text=True, timeout=120,
+        )
+        if result.returncode != 0:
+            return False, (result.stderr or result.stdout).strip()[-400:]
+        # Push immediately. Without this the bead waits for the next sync on
+        # syenite, and the point of the bead is that it travels.
+        push = subprocess.run(
+            ["bd", "dolt", "push"], cwd=REPO_ROOT,
+            capture_output=True, text=True, timeout=180,
+        )
+        if push.returncode != 0:
+            return False, f"created but not pushed: {(push.stderr or push.stdout).strip()[-300:]}"
+    except FileNotFoundError:
+        return False, "bd not found on PATH"
+    except subprocess.TimeoutExpired:
+        return False, "bd timed out"
+    return True, result.stdout.strip().splitlines()[0] if result.stdout.strip() else "created"
 
 
 def send_failure_notification(reason: str, number: int | None, admin_email: str) -> None:
@@ -527,20 +561,25 @@ def main():
     subprocess.run(["git", "push"], cwd=REPO_ROOT)
     print("Draft committed and pushed")
 
-    if not api_key:
-        print("Warning: RESEND_API_KEY not set, skipping email notification")
+    ok, detail = file_review_bead(number, output_path, date, len(extract_urls(content)))
+    if ok:
+        print(f"Review bead filed: {detail}")
         return
-    send_notification(number, output_path, admin_email)
-    print(f"Notification sent to {admin_email}")
+    # The bead is the only handoff, so falling back to email matters here.
+    print(f"Could not file review bead: {detail}")
+    if not api_key:
+        print("Warning: RESEND_API_KEY not set, no fallback notification either")
+        return
+    send_failure_notification(
+        f"Draft No. {padded} is written and pushed, but the review bead could "
+        f"not be filed, so nothing will trigger on the laptop.\n\n"
+        f"Reason: {detail}\n\n"
+        f"Run 'just review {padded}' by hand.",
+        number,
+        admin_email,
+    )
+    print(f"Fallback failure email sent to {admin_email}")
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        api_key = os.environ.get("RESEND_API_KEY")
-        admin_email = os.environ.get("ADMIN_EMAIL", "hello@aris.pub")
-        if api_key:
-            resend.api_key = api_key
-            send_failure_notification(f"Unhandled exception: {e!r}", None, admin_email)
-        raise
+    main()

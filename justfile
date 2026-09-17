@@ -22,6 +22,10 @@ inbox LINK:
     echo '\n- {{LINK}}' >> inbox.md
     git add inbox.md && git commit -m "Inbox: {{LINK}}" && git push
 
+# Review an edition: build it, serve it, open it (what the watcher does automatically)
+review NUMBER:
+    ./scripts/watch-review.sh --force {{NUMBER}}
+
 # Run tests
 test:
     uv run --group dev pytest agent/test_curate.py -v
