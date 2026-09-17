@@ -10,6 +10,7 @@ Feeds, blogs, and outlets to scan for Hallway Track links.
 - [Science Integrity Digest](https://scienceintegritydigest.com/) - Elisabeth Bik, AI-generated content in journals
 - [Import AI](https://importai.substack.com/) - Jack Clark, AI research papers and policy
 - [Proofs and Prompts](https://proofsandprompts.com/) - communal blog by mathematicians on how AI is changing mathematical practice, plus a news feed
+- [Gowers's Weblog](https://gowers.wordpress.com/) - Timothy Gowers, mathematical practice and AI, infrequent but substantial
 
 ## Institutional & Industry
 
