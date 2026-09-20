@@ -86,4 +86,8 @@ just dev           # Local dev server
 - Edition URLs: /no/001/, /no/002/, etc.
 - Footer: "Part of The Aris Program" (never Leo's name)
 - Voice: researcher to researcher, no hype, no excitement
+- No punchy writing anywhere in the newsletter, the social posts, or the site copy. No paired short
+  sentences for rhythm ("The use is real. The record does not reflect it."), no scene-setting openers
+  ("Two data points arrived this week from opposite directions"), no dramatic one-liners or reversals.
+  Leo is a scientist writing to scientists, not a journalist. Ordinary full sentences, content first.
 - `draft: true` in frontmatter prevents rendering and collection inclusion
