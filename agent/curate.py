@@ -347,10 +347,24 @@ def file_review_bead(
             return False, (result.stderr or result.stdout).strip()[-400:]
         # Push immediately. Without this the bead waits for the next sync on
         # syenite, and the point of the bead is that it travels.
-        push = subprocess.run(
-            ["bd", "dolt", "push"], cwd=REPO_ROOT,
-            capture_output=True, text=True, timeout=180,
-        )
+        #
+        # Pull first. Beads are written from the laptop too, so this workspace is
+        # routinely behind and a bare push is rejected non-fast-forward. That is
+        # what broke the 2026-09-20 run of No. 026.
+        def _push() -> subprocess.CompletedProcess:
+            subprocess.run(
+                ["bd", "dolt", "pull"], cwd=REPO_ROOT,
+                capture_output=True, text=True, timeout=180,
+            )
+            return subprocess.run(
+                ["bd", "dolt", "push"], cwd=REPO_ROOT,
+                capture_output=True, text=True, timeout=180,
+            )
+
+        push = _push()
+        if push.returncode != 0:
+            # One retry, in case another writer landed between the pull and the push.
+            push = _push()
         if push.returncode != 0:
             return False, f"created but not pushed: {(push.stderr or push.stdout).strip()[-300:]}"
     except FileNotFoundError:
