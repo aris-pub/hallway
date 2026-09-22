@@ -24,14 +24,28 @@ bd close <id>         # Complete work
 
 ## Landing the Plane (Session Completion)
 
-**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+**When ending a work session**, you MUST complete ALL steps below. Beads must always be synced. Whether the repo's own files get pushed depends on step 4.
 
 **MANDATORY WORKFLOW:**
 
 1. **File issues for remaining work** - Create issues for anything that needs follow-up
 2. **Run quality gates** (if code changed) - Tests, linters, builds
 3. **Update issue status** - Close finished work, update in-progress items
-4. **PUSH TO REMOTE** - This is MANDATORY:
+4. **SYNC** - What this means depends on whether beads live in git.
+
+   Check with `bd config get no-git-ops`.
+
+   **Stealth mode (`no-git-ops: true`, which is the current setting in every Aris repo).**
+   Beads sync through Dolt, not git, so push the beads and leave the repo's own files to
+   the normal commit rule:
+   ```bash
+   bd dolt pull && bd dolt push
+   ```
+   Repo files follow the global rule in `~/.claude/CLAUDE.md`: say when you are ready to
+   commit, and commit only when told.
+
+   **Beads in git (`no-git-ops: false`).** Beads data is part of the working tree, so
+   leaving it uncommitted strands it. Push without asking:
    ```bash
    git pull --rebase
    bd dolt push
@@ -39,14 +53,17 @@ bd close <id>         # Complete work
    git status  # MUST show "up to date with origin"
    ```
 5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
+6. **Verify** - Beads synced. Repo files committed and pushed only if beads are in git, or
+   if the user asked for it
 7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
+- `bd dolt push` is never optional. Beads left unsynced are lost to the next session
+- When beads are in git, work is not complete until `git push` succeeds, and you push
+  rather than announcing you are ready to
+- When beads are in stealth, the global commit rule applies: ready to commit is something
+  you say, committing is something the user asks for
+- If a push fails, resolve and retry until it succeeds
 <!-- END BEADS INTEGRATION -->
 
 
