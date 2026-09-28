@@ -1,2 +1,5 @@
 no-git-ops: true
-sync.remote: "git+ssh://git@github.com/aris-pub/hallway.git"
+# sync.remote: "git+ssh://git@github.com/aris-pub/hallway.git"
+
+sync:
+    remote: "https://doltremoteapi.dolthub.com/leotrs/aris-hallway"
