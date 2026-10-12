@@ -103,6 +103,7 @@ just dev           # Local dev server
 - Edition URLs: /no/001/, /no/002/, etc.
 - Footer: "Part of The Aris Program" (never Leo's name)
 - Voice: researcher to researcher, no hype, no excitement
+- No first person in the edition. The edition has no narrator. Never use "I", "me", or "my" in the synthesis paragraph or anywhere in the edition body
 - No punchy writing anywhere in the newsletter, the social posts, or the site copy. No paired short
   sentences for rhythm ("The use is real. The record does not reflect it."), no scene-setting openers
   ("Two data points arrived this week from opposite directions"), no dramatic one-liners or reversals.
