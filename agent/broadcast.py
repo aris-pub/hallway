@@ -47,12 +47,20 @@ def read_edition(number: str) -> dict:
     date_match = re.search(r"^date:\s*(\S+)\s*$", frontmatter, re.MULTILINE)
     date_str = date_match.group(1) if date_match else None
 
+    title_match = re.search(r"^title:\s*(.+?)\s*$", frontmatter, re.MULTILINE)
+    title = title_match.group(1).strip().strip('"').strip("'") if title_match else None
+
+    desc_match = re.search(r"^description:\s*(.+?)\s*$", frontmatter, re.MULTILINE)
+    description = desc_match.group(1).strip().strip('"').strip("'") if desc_match else None
+
     return {
         "number": padded,
         "body": body,
         "url": f"{SITE_URL}/no/{padded}/",
         "lead": lead_url,
         "date": date_str,
+        "title": title,
+        "description": description,
     }
 
 

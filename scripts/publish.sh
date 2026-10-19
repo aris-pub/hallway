@@ -34,11 +34,17 @@ deploy_and_broadcast() {
     fi
     [ -d node_modules ] || npm install --silent
     node scripts/gen-og-images.js
+    uv run python agent/gen_standardsite_data.py
     npm run build
     git add -A
     git commit -m "Publish No. ${PADDED}"
     git push
     uv run python agent/broadcast.py "$PADDED"
+    # Semble card is non-fatal: the edition is already broadcast by this point,
+    # so a card failure must not abort the publish. post_semble self-skips when
+    # the HT atproto creds are absent.
+    uv run python agent/post_semble.py "$PADDED" || echo "WARNING: Semble card step failed (non-fatal)."
+    uv run python agent/post_standard_site.py "$PADDED" || echo "WARNING: standard.site publish step failed (non-fatal)."
     echo "Deployed and broadcast No. ${PADDED}"
 }
 

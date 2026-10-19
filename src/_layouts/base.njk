@@ -15,6 +15,7 @@
     <meta property="og:image" content="{{ metadata.url }}{% if number %}/images/og/{{ number | padStart(3) }}.png{% else %}/images/og-default.png{% endif %}">
 
     <link rel="canonical" href="{{ page.url | url | absoluteUrl(metadata.url) }}">
+    {% if number %}{% set docKey = standardsite.documents[number | padStart(3)] %}{% if docKey %}<link rel="site.standard.document" href="at://{{ standardsite.did }}/site.standard.document/{{ docKey }}">{% endif %}{% endif %}
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
