@@ -7,6 +7,7 @@ Usage:
 """
 
 import argparse
+import html
 import os
 import re
 import sys
@@ -148,6 +149,23 @@ def inline_markdown_to_html(text: str) -> str:
     )
 
 
+def first_sentence(text: str) -> str:
+    """First sentence of a paragraph, markdown links flattened to their text."""
+    plain = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text).strip()
+    match = re.match(r"(.+?[.!?])(?:\s|$)", plain)
+    return (match.group(1) if match else plain).strip()
+
+
+def preheader(synthesis: list, lead_item: dict | None) -> str:
+    """The one line worth showing as the inbox preview: the synthesis opener, then
+    the lead title, then a generic fallback."""
+    if synthesis:
+        return first_sentence(synthesis[0])
+    if lead_item:
+        return lead_item["title"]
+    return "How AI is affecting the practice of science."
+
+
 def render_item(item: dict, title_size: int = 18) -> str:
     """Render a single item (non-lead) as HTML paragraphs."""
     parts = [
@@ -204,6 +222,18 @@ def markdown_to_html(edition: dict) -> str:
                     break
             if lead_item:
                 break
+
+    # Hidden preheader: mail clients build the inbox preview from the first text
+    # in the body, so without this the all-caps masthead becomes the preview and
+    # repeats the subject line. The zero-width run stops the client pulling the
+    # masthead in after the preview text.
+    preheader_html = (
+        '<div style="display:none; font-size:0; line-height:0; max-height:0; '
+        'overflow:hidden; mso-hide:all; opacity:0;">'
+        + html.escape(preheader(synthesis, lead_item))
+        + "&#847;&zwnj;&nbsp;" * 40
+        + "</div>"
+    )
 
     header_date = format_date(edition["date"])
     header_html = (
@@ -263,6 +293,7 @@ def markdown_to_html(edition: dict) -> str:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin: 0; padding: 0; background: #ffffff;">
+{preheader_html}
 <table cellpadding="0" cellspacing="0" border="0" width="100%" role="presentation" style="background: #ffffff;">
 <tr><td align="center" style="padding: 32px 16px;">
 <table cellpadding="0" cellspacing="0" border="0" width="600" role="presentation" style="max-width: 600px; width: 100%;">
