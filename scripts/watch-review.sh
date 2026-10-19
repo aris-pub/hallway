@@ -77,7 +77,7 @@ fi
 
 log "picked up ${BEAD:-no bead} for No. $PADDED"
 
-git pull --quiet --rebase --autostash 2>>"$LOG" || log "git pull failed, continuing with what is on disk"
+timeout 120 git pull --quiet --rebase --autostash 2>>"$LOG" || log "git pull failed or timed out, continuing with what is on disk"
 [ -d node_modules ] || npm install --silent
 INCLUDE_DRAFTS=1 npm run build >/dev/null 2>&1
 
