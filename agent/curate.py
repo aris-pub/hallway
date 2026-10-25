@@ -29,6 +29,11 @@ INBOX_FILE = REPO_ROOT / "inbox.md"
 MIN_CONTENT_LENGTH = 100
 DEDUP_EDITIONS = 3
 BSKY_MAX_CHARS = 300
+BLOCKED_STATUSES = {401, 403, 429}
+BROWSER_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+)
 
 BEAT = """\
 How AI is affecting the practice of science. Specifically: AI agents for \
@@ -111,7 +116,55 @@ def extract_bsky_text(post_content: str) -> str:
     return "\n".join(bsky_lines).strip()
 
 
-def build_dedup_retry_prompt(output_path: Path, duplicates: list[str]) -> str:
+def extract_lead(content: str) -> str | None:
+    """Return the `lead:` URL from an edition's frontmatter, or None."""
+    match = re.search(r"^lead:\s*(\S+)\s*$", content, re.MULTILINE)
+    return match.group(1) if match else None
+
+
+def lead_problem(content: str) -> str | None:
+    """Describe why the edition's lead is invalid, or return None if it is fine.
+
+    The title, the email marquee and the social posts are all built on the lead,
+    so a lead that is not one of the body items breaks all of them at once.
+    """
+    lead = extract_lead(content)
+    if not lead:
+        return "The frontmatter has no lead URL."
+    if lead not in extract_urls(content):
+        return f"The lead URL is not linked from any item in the edition: {lead}"
+    return None
+
+
+def _lead_removal_note(removed: list[str], lead: str | None, post_path: Path | None,
+                       aris_path: Path | None) -> str:
+    """Extra instructions for a removal retry that is about to drop the lead item.
+
+    Without this the retry deletes the lead item but leaves the frontmatter, the
+    synthesis and the social posts pointing at it (No. 030).
+    """
+    if not lead or lead not in removed:
+        return ""
+    files = " and ".join(str(p) for p in (post_path, aris_path) if p and p.exists())
+    note = (
+        f"\n\nOne of the URLs above is the edition's lead ({lead}). After removing it, "
+        f"pick a new lead from the remaining items: set `lead:` in the frontmatter to that "
+        f"item's URL, rewrite the `title:` and the synthesis paragraph so they no longer "
+        f"mention the removed item. These frontmatter and synthesis changes are allowed "
+        f"and required, overriding the rule above."
+    )
+    if files:
+        note += (
+            f" Then rewrite {files} so the Bluesky post, the LinkedIn post and any "
+            f"repost framing are about the new lead and do not mention the removed item. "
+            f"Keep the Bluesky section under 280 characters."
+        )
+    return note
+
+
+def build_dedup_retry_prompt(output_path: Path, duplicates: list[str],
+                             lead: str | None = None, post_path: Path | None = None,
+                             aris_path: Path | None = None) -> str:
     """Tell the agent to remove URLs that already appeared in recent editions."""
     url_list = "\n".join(f"- {u}" for u in duplicates)
     return (
@@ -120,13 +173,16 @@ def build_dedup_retry_prompt(output_path: Path, duplicates: list[str]) -> str:
         f"Read {output_path}, then remove every item that links to any of the URLs above. "
         f"You may rename or merge sections if a section becomes empty after removal, but "
         f"do not change the synthesis paragraph at the top, the frontmatter, or any URLs "
-        f"not listed above. Do not add new items.\n\n"
+        f"not listed above. Do not add new items."
+        f"{_lead_removal_note(duplicates, lead, post_path, aris_path)}\n\n"
         f"Use the Write tool to overwrite {output_path}. "
         f"After writing, say ONLY 'Dedup retry complete' and nothing else."
     )
 
 
-def build_broken_link_retry_prompt(output_path: Path, broken_urls: list[str]) -> str:
+def build_broken_link_retry_prompt(output_path: Path, broken_urls: list[str],
+                                   lead: str | None = None, post_path: Path | None = None,
+                                   aris_path: Path | None = None) -> str:
     """Tell the agent to remove items whose links do not resolve."""
     url_list = "\n".join(f"- {u}" for u in broken_urls)
     return (
@@ -136,7 +192,8 @@ def build_broken_link_retry_prompt(output_path: Path, broken_urls: list[str]) ->
         f"You may rename or merge sections if a section becomes empty after removal, but "
         f"do not change the synthesis paragraph at the top, the frontmatter, or any URLs "
         f"not listed above. Do not add new items and do not substitute a replacement link "
-        f"for a removed one.\n\n"
+        f"for a removed one."
+        f"{_lead_removal_note(broken_urls, lead, post_path, aris_path)}\n\n"
         f"Use the Write tool to overwrite {output_path}. "
         f"After writing, say ONLY 'Broken link retry complete' and nothing else."
     )
@@ -192,14 +249,21 @@ def verify_links(content: str) -> list[tuple[str, str]]:
     """
     urls = extract_urls(content)
     broken = []
-    with httpx.Client(timeout=10, follow_redirects=True) as client:
+    with httpx.Client(timeout=10, follow_redirects=True,
+                      headers={"User-Agent": BROWSER_UA}) as client:
         for url in urls:
             try:
                 resp = client.head(url)
                 if resp.status_code >= 400:
-                    broken.append((url, str(resp.status_code)))
+                    # Many sites reject HEAD outright, so confirm with a real GET.
+                    resp = client.get(url)
             except httpx.RequestError:
                 broken.append((url, "UNREACHABLE"))
+                continue
+            # 401/403/429 mean a bot wall or rate limit, not a missing page.
+            # R&D World's 403 got the No. 030 lead deleted.
+            if resp.status_code >= 400 and resp.status_code not in BLOCKED_STATUSES:
+                broken.append((url, str(resp.status_code)))
     return broken
 
 
@@ -480,7 +544,10 @@ def main():
             print(f"  {reason}: {url}")
         try:
             retry_code, retry_output = run_claude(
-                build_broken_link_retry_prompt(output_path, [u for u, _ in broken])
+                build_broken_link_retry_prompt(
+                    output_path, [u for u, _ in broken],
+                    extract_lead(content), post_path, aris_path,
+                )
             )
         except subprocess.TimeoutExpired:
             fail("Broken link retry timed out after 10 minutes.")
@@ -512,7 +579,10 @@ def main():
                 print(f"  duplicate: {u}")
             try:
                 retry_code, retry_output = run_claude(
-                    build_dedup_retry_prompt(output_path, duplicates)
+                    build_dedup_retry_prompt(
+                        output_path, duplicates,
+                        extract_lead(content), post_path, aris_path,
+                    )
                 )
             except subprocess.TimeoutExpired:
                 fail("Dedup retry timed out after 10 minutes.")
@@ -557,6 +627,11 @@ def main():
                 )
                 return
             print(f"Retry succeeded: Bluesky text now {len(bsky_text)} chars.")
+
+    problem = lead_problem(output_path.read_text())
+    if problem:
+        fail(f"{problem} The title, email and social posts depend on it. Manual fix needed.")
+        return
 
     print(f"Draft written to {output_path}")
 

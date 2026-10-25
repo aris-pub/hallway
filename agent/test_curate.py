@@ -5,17 +5,21 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 
 from curate import (
     BSKY_MAX_CHARS,
+    build_broken_link_retry_prompt,
     build_bsky_retry_prompt,
     build_dedup_retry_prompt,
     extract_bsky_text,
+    extract_lead,
     extract_links,
     extract_urls,
     get_previous_entries,
     get_previous_urls,
+    lead_problem,
     next_edition_number,
     next_publish_date,
     parse_sources,
@@ -449,3 +453,79 @@ class TestNextPublishDate:
             day = start + timedelta(days=offset)
             result = datetime.strptime(next_publish_date(day), "%Y-%m-%d")
             assert -2 <= (result - day).days <= 6
+
+
+def _fake_client(statuses):
+    """Patch httpx.Client so each URL answers with statuses[url] = (head, get)."""
+    real_client = httpx.Client
+
+    def handler(request):
+        head, get = statuses[str(request.url)]
+        return httpx.Response(head if request.method == "HEAD" else get)
+
+    def factory(**kwargs):
+        return real_client(transport=httpx.MockTransport(handler), **kwargs)
+
+    return patch("curate.httpx.Client", side_effect=factory)
+
+
+class TestVerifyLinksStatuses:
+    def test_bot_wall_403_is_not_broken(self):
+        url = "https://www.rdworldonline.com/x/"
+        with _fake_client({url: (403, 403)}):
+            assert verify_links(f"- [A]({url})") == []
+
+    def test_head_rejected_but_get_ok_is_not_broken(self):
+        url = "https://example.com/a"
+        with _fake_client({url: (405, 200)}):
+            assert verify_links(f"- [A]({url})") == []
+
+    def test_404_is_broken(self):
+        url = "https://example.com/gone"
+        with _fake_client({url: (404, 404)}):
+            assert verify_links(f"- [A]({url})") == [(url, "404")]
+
+
+EDITION = """---
+title: "T"
+lead: https://a.com/lead
+draft: true
+---
+
+Synthesis.
+
+## S
+
+- [Lead](https://a.com/lead)
+- [Other](https://b.com/other)
+"""
+
+
+class TestLead:
+    def test_extract_lead(self):
+        assert extract_lead(EDITION) == "https://a.com/lead"
+
+    def test_valid_lead(self):
+        assert lead_problem(EDITION) is None
+
+    def test_lead_missing_from_body(self):
+        content = EDITION.replace("- [Lead](https://a.com/lead)\n", "")
+        assert "not linked" in lead_problem(content)
+
+    def test_no_lead(self):
+        assert "no lead" in lead_problem(EDITION.replace("lead: https://a.com/lead\n", ""))
+
+    def test_retry_prompt_handles_removed_lead(self, tmp_path):
+        post = tmp_path / "030.post.md"
+        post.write_text("bsky\n\n---\n\nli\n")
+        prompt = build_broken_link_retry_prompt(
+            tmp_path / "030.md", ["https://a.com/lead"], "https://a.com/lead", post, None
+        )
+        assert "pick a new lead" in prompt
+        assert str(post) in prompt
+
+    def test_retry_prompt_unchanged_when_lead_kept(self, tmp_path):
+        prompt = build_dedup_retry_prompt(
+            tmp_path / "030.md", ["https://b.com/other"], "https://a.com/lead", None, None
+        )
+        assert "new lead" not in prompt
