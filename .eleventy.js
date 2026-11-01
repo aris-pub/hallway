@@ -1,4 +1,5 @@
 const pluginRss = require("@11ty/eleventy-plugin-rss");
+const { anchorItems } = require("./lib/item-anchors");
 
 module.exports = function(eleventyConfig) {
   eleventyConfig.addPlugin(pluginRss);
@@ -9,6 +10,13 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/favicon.svg");
   eleventyConfig.addPassthroughCopy("src/images");
   eleventyConfig.addPassthroughCopy({ "src/.well-known": ".well-known" });
+
+  eleventyConfig.addTransform("itemAnchors", function(content) {
+    if (this.page.outputPath && /\/no\/\d{3}\/index\.html$/.test(this.page.outputPath)) {
+      return anchorItems(content);
+    }
+    return content;
+  });
 
   eleventyConfig.addFilter("dateFormat", (date) => {
     const d = new Date(date);

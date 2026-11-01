@@ -14,6 +14,7 @@ from curate import (
     build_bsky_retry_prompt,
     build_dedup_retry_prompt,
     extract_bsky_text,
+    extract_item_links,
     extract_lead,
     extract_links,
     extract_urls,
@@ -158,7 +159,28 @@ class TestExtractLinks:
         assert extract_links("Just prose, no links.") == []
 
 
+class TestExtractItemLinks:
+    def test_skips_links_in_synthesis_and_descriptions(self):
+        text = (
+            "A [phrase](https://a.com) in the synthesis.\n\n"
+            "## S\n\n"
+            "- [Item A](https://a.com)\n\n"
+            "  Framing with a [side link](https://c.com).\n\n"
+            "- [Item B](https://b.com)\n"
+        )
+        assert extract_item_links(text) == [("Item A", "https://a.com"), ("Item B", "https://b.com")]
+
+
 class TestGetPreviousEntries:
+    def test_item_title_wins_over_synthesis_phrase(self, editions_dir):
+        (editions_dir / "008.md").write_text(
+            "---\n---\nSee [this study](https://a.com).\n\n## S\n\n- [Real Title](https://a.com)\n"
+        )
+        assert get_previous_entries(n=1) == [
+            {"url": "https://a.com", "title": "Real Title", "edition": 8}
+        ]
+
+
     def test_returns_entries_with_url_title_edition(self, editions_dir):
         (editions_dir / "008.md").write_text(
             "---\n---\n- [AutoScientists](https://arxiv.org/abs/2605.28655)\n"
@@ -511,6 +533,17 @@ class TestLead:
     def test_lead_missing_from_body(self):
         content = EDITION.replace("- [Lead](https://a.com/lead)\n", "")
         assert "not linked" in lead_problem(content)
+
+    def test_lead_linked_only_from_synthesis(self):
+        content = EDITION.replace("- [Lead](https://a.com/lead)\n", "").replace(
+            "Synthesis.", "See [the lead](https://a.com/lead)."
+        )
+        assert "not linked" in lead_problem(content)
+
+    def test_retry_prompts_unlink_synthesis_phrases(self, tmp_path):
+        for build in (build_dedup_retry_prompt, build_broken_link_retry_prompt):
+            prompt = build(tmp_path / "030.md", ["https://b.com/other"])
+            assert "keep the phrase as plain text" in prompt
 
     def test_no_lead(self):
         assert "no lead" in lead_problem(EDITION.replace("lead: https://a.com/lead\n", ""))

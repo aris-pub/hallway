@@ -29,6 +29,7 @@ review NUMBER:
 # Run tests
 test:
     uv run --group dev pytest agent/test_curate.py -v
+    node --test lib/
 
 # Start local dev server
 dev:

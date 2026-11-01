@@ -101,6 +101,15 @@ def extract_urls(text: str) -> list[str]:
     return [url for _, url in extract_links(text)]
 
 
+def extract_item_links(text: str) -> list[tuple[str, str]]:
+    """Extract the (title, url) of each edition item, skipping links in prose.
+
+    The synthesis paragraph links phrases to items by reusing the item's URL, so
+    counting every link would count those items twice.
+    """
+    return re.findall(r"^\s*- \[(.+?)\]\((https?://[^\)]+)\)", text, re.MULTILINE)
+
+
 def extract_bsky_text(post_content: str) -> str:
     """Return the Bluesky section of a post.md file (everything before the first '---' line).
 
@@ -131,9 +140,15 @@ def lead_problem(content: str) -> str | None:
     lead = extract_lead(content)
     if not lead:
         return "The frontmatter has no lead URL."
-    if lead not in extract_urls(content):
+    if lead not in [url for _, url in extract_item_links(content)]:
         return f"The lead URL is not linked from any item in the edition: {lead}"
     return None
+
+
+SYNTHESIS_UNLINK_NOTE = (
+    " One exception: if the synthesis paragraph links a phrase to one of the URLs "
+    "above, remove that link but keep the phrase as plain text."
+)
 
 
 def _lead_removal_note(removed: list[str], lead: str | None, post_path: Path | None,
@@ -174,6 +189,7 @@ def build_dedup_retry_prompt(output_path: Path, duplicates: list[str],
         f"You may rename or merge sections if a section becomes empty after removal, but "
         f"do not change the synthesis paragraph at the top, the frontmatter, or any URLs "
         f"not listed above. Do not add new items."
+        f"{SYNTHESIS_UNLINK_NOTE}"
         f"{_lead_removal_note(duplicates, lead, post_path, aris_path)}\n\n"
         f"Use the Write tool to overwrite {output_path}. "
         f"After writing, say ONLY 'Dedup retry complete' and nothing else."
@@ -193,6 +209,7 @@ def build_broken_link_retry_prompt(output_path: Path, broken_urls: list[str],
         f"do not change the synthesis paragraph at the top, the frontmatter, or any URLs "
         f"not listed above. Do not add new items and do not substitute a replacement link "
         f"for a removed one."
+        f"{SYNTHESIS_UNLINK_NOTE}"
         f"{_lead_removal_note(broken_urls, lead, post_path, aris_path)}\n\n"
         f"Use the Write tool to overwrite {output_path}. "
         f"After writing, say ONLY 'Broken link retry complete' and nothing else."
@@ -228,7 +245,14 @@ def get_previous_entries(n: int = DEDUP_EDITIONS) -> list[dict]:
             edition = int(f.stem)
         except ValueError:
             continue
-        for title, url in extract_links(f.read_text()):
+        text = f.read_text()
+        seen = set()
+        # Item titles name the paper, so they go first and win over prose links
+        # that reuse the same URL.
+        for title, url in extract_item_links(text) + extract_links(text):
+            if url in seen:
+                continue
+            seen.add(url)
             entries.append({"url": url, "title": title.strip(), "edition": edition})
         count += 1
         if count >= n:
@@ -247,7 +271,7 @@ def verify_links(content: str) -> list[tuple[str, str]]:
     Returns a list of (url, reason) for every URL that does not. A link that fails
     here never ships: the caller asks the agent to drop the item and re-checks.
     """
-    urls = extract_urls(content)
+    urls = list(dict.fromkeys(extract_urls(content)))
     broken = []
     with httpx.Client(timeout=10, follow_redirects=True,
                       headers={"User-Agent": BROWSER_UA}) as client:
@@ -568,7 +592,7 @@ def main():
         print(f"Broken link retry succeeded: all {len(broken)} removed.")
 
     if previous_urls:
-        duplicates = [u for u in extract_urls(content) if u in set(previous_urls)]
+        duplicates = [u for u in dict.fromkeys(extract_urls(content)) if u in set(previous_urls)]
         if duplicates:
             print(
                 f"Dedup violation: {len(duplicates)} URL(s) in {output_path} already "
@@ -650,7 +674,7 @@ def main():
     subprocess.run(["git", "push"], cwd=REPO_ROOT)
     print("Draft committed and pushed")
 
-    ok, detail = file_review_bead(number, output_path, date, len(extract_urls(content)))
+    ok, detail = file_review_bead(number, output_path, date, len(extract_item_links(content)))
     if ok:
         print(f"Review bead filed: {detail}")
         return

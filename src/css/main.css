@@ -55,6 +55,12 @@ html {
     scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
 body {
     font-family: var(--font-sans);
     font-size: 19px;
@@ -218,6 +224,20 @@ nav a:hover {
 
 .edition-body li {
     margin-bottom: var(--space-md);
+}
+
+.edition-body li[id] {
+    scroll-margin-top: var(--space-md);
+}
+
+/* Shows which item a synthesis link jumped to. */
+.edition-body li:target {
+    animation: item-target 2.5s ease-out;
+}
+
+@keyframes item-target {
+    from { background-color: var(--bg-card); }
+    to { background-color: transparent; }
 }
 
 .edition-body li:last-child {
